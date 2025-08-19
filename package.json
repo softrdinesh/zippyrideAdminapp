@@ -20,7 +20,6 @@
     "@react-navigation/drawer": "^6.6.2",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
-    "@reduxjs/toolkit": "^2.6.1",
     "@tanstack/react-query": "^5.85.5",
     "axios": "^1.11.0",
     "formik": "^2.4.6",
@@ -46,7 +45,6 @@
     "react-native-svg-transformer": "^1.5.0",
     "react-native-toast-message": "^2.2.0",
     "react-native-version-check": "^3.5.0",
-    "react-redux": "^9.2.0",
     "yup": "^1.6.1",
     "zustand": "^5.0.7"
   },

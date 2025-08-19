@@ -3,8 +3,6 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { enableScreens } from "react-native-screens";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Provider } from "react-redux";
-import { store } from "./src/Reudx/slices/store";
 import { AuthNavigator } from "./src/navigation/AuthNavigator";
 import BottomTabs from "./src/navigation/Bottomtabs";
 
@@ -59,18 +57,16 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Provider store={store}>
-        <SafeAreaProvider>
-          <NavigationContainer
-            ref={navigationRef}
-            onReady={() => {
-              // Process any queued notifications once navigation is ready
-            }}
-          >
-            <NavigationRoot />
-          </NavigationContainer>
-        </SafeAreaProvider>
-      </Provider>
+      <SafeAreaProvider>
+        <NavigationContainer
+          ref={navigationRef}
+          onReady={() => {
+            // Process any queued notifications once navigation is ready
+          }}
+        >
+          <NavigationRoot />
+        </NavigationContainer>
+      </SafeAreaProvider>
     </QueryClientProvider>
   );
 }

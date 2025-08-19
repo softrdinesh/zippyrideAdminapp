@@ -24,12 +24,9 @@ import SvgEye from "../../icons/SvgEye";
 import SvgEyeOutline from "../../icons/SvgEyleOutLine";
 import InputText from "../../uikit/InputText/InputText";
 import Button from "../../uikit/Button/Button";
-import { useUserLoginMutation } from "../../services/Apiconfig";
-// import { authenticateOwner, setFirstLogin } from "../../Reudx/slices/authSlice";
 import { getItem, setItem } from "../../utils/mmkvStorage";
 import Loader from "../../uikit/Loader/Loader";
-import { useForgotPasswordOTPMutation } from "../../services/Apiconfig";
-import { useLogin } from "../../services/api";
+import { useForgotPassword, useLogin } from "../../services/api";
 import { useAuthStore } from "../../zustand/useAuthStore";
 
 const { width, height } = Dimensions.get("window");
@@ -40,10 +37,10 @@ const SignInScreen = () => {
   const [loading, setLoading] = useState(false);
   const [locationReady, setLocationReady] = useState(false);
   const loginMutation = useLogin();
-  // Replace Redux dispatch with Zustand
+
   const { authenticateOwner, setFirstLogin } = useAuthStore();
 
-  const [ForgotMutation] = useForgotPasswordOTPMutation();
+  const forgotPasswordMutation = useForgotPassword();
   const locationRef = useRef({
     latitude: null,
     longitude: null,
@@ -298,7 +295,7 @@ const SignInScreen = () => {
     setLoading(true);
     try {
       const payload = { Email: username, OtpType: "SI" };
-      const response = await ForgotMutation(payload);
+      const response = await forgotPasswordMutation.mutateAsync(payload);
 
       setLoading(false);
 
