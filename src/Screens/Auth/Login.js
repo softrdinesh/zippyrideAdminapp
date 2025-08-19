@@ -16,9 +16,7 @@ import { useFormik } from "formik";
 import Geolocation from "@react-native-community/geolocation";
 import * as Yup from "yup";
 import Toast from "react-native-toast-message";
-import { useDispatch } from "react-redux";
 import { promptForEnableLocationIfNeeded } from "react-native-android-location-enabler";
-import { useSelector } from "react-redux";
 import messaging from "@react-native-firebase/messaging";
 
 import SvgBack from "../../icons/SvgBack";
@@ -26,36 +24,25 @@ import SvgEye from "../../icons/SvgEye";
 import SvgEyeOutline from "../../icons/SvgEyleOutLine";
 import InputText from "../../uikit/InputText/InputText";
 import Button from "../../uikit/Button/Button";
-import { useUserLoginMutation } from "../../uikit/UikitUtils/Apiconfig";
-import { login } from "../../Reudx/slices/authSlice";
-import { getItem, setItem } from "../../uikit/UikitUtils/mmkvStorage";
+import { useUserLoginMutation } from "../../services/Apiconfig";
+// import { authenticateOwner, setFirstLogin } from "../../Reudx/slices/authSlice";
+import { getItem, setItem } from "../../utils/mmkvStorage";
 import Loader from "../../uikit/Loader/Loader";
-import { useForgotPasswordOTPMutation } from "../../uikit/UikitUtils/Apiconfig";
+import { useForgotPasswordOTPMutation } from "../../services/Apiconfig";
+import { useLogin } from "../../services/api";
+import { useAuthStore } from "../../zustand/useAuthStore";
 
 const { width, height } = Dimensions.get("window");
-const firstlogin = getItem("firstimelogin");
+
 const SignInScreen = () => {
   const navigation = useNavigation();
-  const dispatch = useDispatch();
   const [hidePassword, setHidePassword] = useState(true);
   const [loading, setLoading] = useState(false);
   const [locationReady, setLocationReady] = useState(false);
-  const [loginMutation] = useUserLoginMutation();
-  const isLoginCount = useSelector((state) => state.auth.isLoginCount);
+  const loginMutation = useLogin();
+  // Replace Redux dispatch with Zustand
+  const { authenticateOwner, setFirstLogin } = useAuthStore();
 
-  const [firstlogin, setFirstLogin] = useState(
-    getItem("firstimelogin") || "true"
-  );
-  useEffect(() => {
-    const value = getItem("firstimelogin");
-    if (value !== undefined) {
-      setFirstLogin(value);
-    } else {
-      setItem("firstimelogin", "true");
-      setFirstLogin("true");
-    }
-  }, []);
-  const [isLoading, setIsLoading] = useState(false);
   const [ForgotMutation] = useForgotPasswordOTPMutation();
   const locationRef = useRef({
     latitude: null,
@@ -228,51 +215,81 @@ const SignInScreen = () => {
           username: values.username,
           password: values.password,
           deviceToken: fcmToken,
-          longtitude: locationRef.current.longitude.toString(),
-          latitude: locationRef.current.latitude.toString(),
+          longtitude: locationRef.current.longitude?.toString(),
+          latitude: locationRef.current.latitude?.toString(),
         };
-        const response = await loginMutation(payload);
+
+        const response = await loginMutation.mutateAsync(payload);
+
         console.log("Login response:", response);
 
-        setLoading(false);
-        if (response?.data?.loginStatus === false) {
+        if (!response?.loginStatus) {
           Toast.show({
             type: "error",
             text1: "Error",
-            text2: "Invalid credentials",
-            position: "top",
-            topOffset: 5,
+            text2: response?.message || "Invalid credentials",
           });
           return;
         }
+        // INFO: New code
+        // Dispatch owner authentication
+        authenticateOwner({
+          id: response.ownerID.toString(),
+          username: response.userName,
+          token: response.tokenvalue,
+          isFirstLogin: response.isFirstLogin,
+        });
 
-        // Save user info
-        dispatch(login());
-        setItem("userdata", response.data.ownerID.toString());
-        // setItem("name", response.data.userName);
-        setItem("token", `Bearer ${response.data.tokenvalue}`);
-
+        // Show success toast
         Toast.show({
           type: "success",
           text1: "Success",
-          text2: `${values.username} OTP sent successfully`,
+          text2: "Login successful",
           position: "top",
         });
+        // Handle first login
+        const isFirstTime = !getItem("isFirstLogin");
+        if (isFirstTime) {
+          setFirstLogin(true);
+          setItem("isFirstLogin", "true");
+        }
 
-        await Resendvalue(values.username);
+        // Store auth data
+        setItem("token", `Bearer ${response.tokenvalue}`);
 
-        // Navigate to OTP screen
-        setItem("email", values.username);
-        setItem("otpverified", "false");
-        navigation.navigate("Loginotpverificationscreen", {
-          mail: values.username,
-        });
+        // INFO: Earlier code
+        // // Save user info
+        // dispatch(login());
+        // setItem("userdata", response.data.ownerID.toString());
+        // // setItem("name", response.data.userName);
+        // setItem("token", `Bearer ${response.data.tokenvalue}`);
 
-        // Reset form after successful login
+        // Toast.show({
+        //   type: "success",
+        //   text1: "Success",
+        //   text2: `${values.username} OTP sent successfully`,
+        //   position: "top",
+        // });
+
+        // await Resendvalue(values.username);
+
+        // // Navigate to OTP screen
+        // setItem("email", values.username);
+        // setItem("otpverified", "false");
+
+        // // Navigate to OTP verification
+        // navigation.navigate("Loginotpverificationscreen", {
+        //   username: values.username,
+        // });
+
         formik.resetForm();
       } catch (error) {
         setLoading(false);
-        console.error("Login failed:", error);
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: getAxiosErrorMessage(error),
+        });
       }
     },
   });
