@@ -117,7 +117,7 @@ export const api = createApi({
     // * Authentication
     userLogin: build.mutation({
       query: (payload) => ({
-        url: "users/login",
+        url: "Ownerlogin",
         method: "POST",
         body: payload,
       }),
