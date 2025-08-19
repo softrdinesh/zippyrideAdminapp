@@ -22,14 +22,13 @@ import { Dropdown } from "react-native-element-dropdown";
 import { StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import SvgBack from "../../icons/SvgBack";
-import {
-  BASE_URL,
-  useUserSignupMutation,
-} from "../../uikit/UikitUtils/Apiconfig";
+
 import Geolocation from "@react-native-community/geolocation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Svg, { Path, Circle, Rect, G } from "react-native-svg";
+import { useSignup } from "../../services/api";
+
 import PhoneInputText from "../../uikit/PhoneInputText/PhoneInputText";
 import Loader from "../../uikit/Loader/Loader";
 import SvgEyeOutline from "../../icons/SvgEyleOutLine";
@@ -45,12 +44,12 @@ const Register = () => {
   const [isSuccess, setSuccess] = useState(false);
   const colorScheme = useColorScheme();
   const modalizeRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
-  const [signupMutation, { isLoading: isSignupLoading }] =
-    useUserSignupMutation();
+  const { mutateAsync: signupMutation, isPending: isSignupLoading } =
+    useSignup();
+  const isLoading = isSignupLoading;
   const [countryCode, setCountryCode] = useState("+91");
-  const [address, setaddress] = useState("");
+
   const [profilepick, setprofilepick] = useState("");
   const [hidePassword, setHidePassword] = useState(true);
   const [hidePassword1, setHidePassword1] = useState(true);
@@ -161,18 +160,14 @@ const Register = () => {
         formdata.append("Password", values.password);
         console.log("Form data:", formdata);
 
-        const response = await axios.post(`${BASE_URL}OwnerSignup`, formdata, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-        console.log(response.data, "responsie");
-        if (response.data && response.data.ownerID) {
-          useridref.current = response.data.ownerID;
+        const response = await signupMutation(formdata);
+
+        if (response && response.ownerID) {
+          useridref.current = response.ownerID;
           setSuccess(true);
         } else {
           setisfailer(true);
-          setfailermessage(response.data?.message || "Signup failed");
+          setfailermessage(response?.message || "Signup failed");
         }
       } catch (error) {
         console.error("Signup failed:", error);
@@ -272,8 +267,10 @@ const Register = () => {
         style={{ flex: 1 }}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
+        {isSignupLoading && <Loader />}
         {loading && <Loader />}
         {isLoading && <Loader />}
+
         <RegisterSuccessModal open={isSuccess} close={handleClose} />
         <Registererrormodal
           open={isfailer}
