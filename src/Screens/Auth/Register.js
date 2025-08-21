@@ -36,6 +36,7 @@ import SvgEye from "../../icons/SvgEye";
 import Registererrormodal from "./registererror";
 import RegisterSuccessModal from "./registersuccess";
 import { getAxiosErrorMessage } from "../../uikit/UikitUtils/helpers";
+import SvgCameraIcon from "../../icons/SvgCameraIcon";
 
 const { width, height } = Dimensions.get("window");
 
@@ -309,18 +310,7 @@ const Register = () => {
                   style={styles.profilePhoto}
                 />
                 <View style={styles.cameraIcon}>
-                  <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                    <Path
-                      d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z"
-                      stroke="white"
-                      strokeWidth="2"
-                    />
-                    <Path
-                      d="M3 16.8V7.2C3 6.0799 3 5.51984 3.21799 5.09202C3.40973 4.71569 3.71569 4.40973 4.09202 4.21799C4.51984 4 5.0799 4 6.2 4H7.25464C7.37758 4 7.43905 4 7.49576 3.9935C7.79166 3.95961 8.05705 3.79559 8.21969 3.54609C8.25086 3.49827 8.27836 3.44433 8.33333 3.33646L8.8 2.5C8.9561 2.19094 9.03415 2.03642 9.1366 1.90703C9.38462 1.60087 9.72956 1.38525 10.1161 1.29572C10.2745 1.2607 10.4387 1.2607 10.7672 1.2607H13.2328C13.5613 1.2607 13.7255 1.2607 13.8839 1.29572C14.2704 1.38525 14.6154 1.60087 14.8634 1.90703C14.9658 2.03642 15.0439 2.19094 15.2 2.5L15.6667 3.33646C15.7216 3.44433 15.7491 3.49827 15.7803 3.54609C15.943 3.79559 16.2083 3.95961 16.5042 3.9935C16.561 4 16.6224 4 16.7454 4H17.8C18.9201 4 19.4802 4 19.908 4.21799C20.2843 4.40973 20.5903 4.71569 20.782 5.09202C21 5.51984 21 6.0799 21 7.2V16.8C21 17.9201 21 18.4802 20.782 18.908C20.5903 19.2843 20.2843 19.5903 19.908 19.782C19.4802 20 18.9201 20 17.8 20H6.2C5.0799 20 4.51984 20 4.09202 19.782C3.71569 19.5903 3.40973 19.2843 3.21799 18.908C3 18.4802 3 17.9201 3 16.8Z"
-                      stroke="white"
-                      strokeWidth="2"
-                    />
-                  </Svg>
+                  <SvgCameraIcon />
                 </View>
               </TouchableOpacity>
               <Text style={styles.profileText}>Add Profile Photo</Text>
