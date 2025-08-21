@@ -38,7 +38,7 @@ const SignInScreen = () => {
   const [locationReady, setLocationReady] = useState(false);
   const loginMutation = useLogin();
 
-  const { authenticateOwner, setFirstLogin } = useAuthStore();
+  const { authenticateOwner } = useAuthStore();
 
   const forgotPasswordMutation = useForgotPassword();
   const locationRef = useRef({
@@ -234,7 +234,7 @@ const SignInScreen = () => {
           id: response.ownerID.toString(),
           username: response.userName,
           token: response.tokenvalue,
-          isFirstLogin: response.isFirstLogin,
+          isVehicleTag: response.isvehicleTag,
         });
 
         // Show success toast
@@ -244,12 +244,6 @@ const SignInScreen = () => {
           text2: "Login successful",
           position: "top",
         });
-        // Handle first login
-        const isFirstTime = !getItem("isFirstLogin");
-        if (isFirstTime) {
-          setFirstLogin(true);
-          setItem("isFirstLogin", "true");
-        }
 
         // Store auth data
         setItem("token", `Bearer ${response.tokenvalue}`);

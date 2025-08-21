@@ -5,22 +5,22 @@ interface OwnerProfile {
   id: string;
   username: string;
   token: string;
-  isFirstLogin: boolean;
+  isVehicleTag: boolean;
 }
 
 interface AuthState {
   isAuthenticated: boolean;
-  isFirstLogin: boolean;
+  isVehicleTag: boolean;
   ownerProfile: OwnerProfile | null;
   token: string | null;
   authenticateOwner: (profile: OwnerProfile) => void;
   logoutOwner: () => void;
-  setFirstLogin: (value: boolean) => void;
+  setIsVehicleTag: (value: boolean) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: getItem("isAuthenticated") === "true",
-  isFirstLogin: getItem("isFirstLogin") === "true",
+  isVehicleTag: getItem("isVehicleTag") === "true",
   ownerProfile: JSON.parse(getItem("ownerProfile") || "null"),
   token: getItem("token"),
 
@@ -28,7 +28,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       isAuthenticated: true,
       ownerProfile: profile,
-      isFirstLogin: profile.isFirstLogin,
+      isVehicleTag: profile.isVehicleTag,
       token: profile.token,
     });
     setItem("isAuthenticated", "true");
@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       isAuthenticated: false,
       ownerProfile: null,
-      isFirstLogin: false,
+      isVehicleTag: false,
       token: null,
     });
     removeItem("isAuthenticated");
@@ -48,8 +48,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     removeItem("token");
   },
 
-  setFirstLogin: (value: boolean) => {
-    set({ isFirstLogin: value });
-    setItem("isFirstLogin", value.toString());
+  setIsVehicleTag: (value: boolean) => {
+    set({ isVehicleTag: value });
+    setItem("isVehicleTag", value.toString());
   },
 }));
