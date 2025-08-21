@@ -10,6 +10,9 @@ import Navbar from "./src/Screens/Navbar/Navbar";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "./src/zustand/useAuthStore";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import VehicleSetup from "./src/Screens/Vehicle/vehicleSetupScreen";
+import Toast from "react-native-toast-message";
 
 enableScreens();
 
@@ -25,7 +28,7 @@ const queryClient = new QueryClient({
 });
 
 const NavigationRoot = () => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isVehicleTag } = useAuthStore();
 
   return (
     <Stack.Navigator
@@ -37,6 +40,8 @@ const NavigationRoot = () => {
       {!isAuthenticated ? (
         // Auth screens
         <Stack.Screen name="Auth" component={AuthNavigator} />
+      ) : !isVehicleTag ? (
+        <Stack.Screen name="VehicleSetup" component={VehicleSetup} />
       ) : (
         // Protected screens
         <>
@@ -57,16 +62,19 @@ export default function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SafeAreaProvider>
-        <NavigationContainer
-          ref={navigationRef}
-          onReady={() => {
-            // Process any queued notifications once navigation is ready
-          }}
-        >
-          <NavigationRoot />
-        </NavigationContainer>
-      </SafeAreaProvider>
+      <GestureHandlerRootView>
+        <SafeAreaProvider>
+          <NavigationContainer
+            ref={navigationRef}
+            onReady={() => {
+              // Process any queued notifications once navigation is ready
+            }}
+          >
+            <NavigationRoot />
+          </NavigationContainer>
+          <Toast />
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
     </QueryClientProvider>
   );
 }

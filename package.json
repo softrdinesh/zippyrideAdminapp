@@ -12,6 +12,7 @@
   "dependencies": {
     "@mapbox/polyline": "^1.2.1",
     "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-community/datetimepicker": "^8.4.4",
     "@react-native-community/geolocation": "^3.4.0",
     "@react-native-community/netinfo": "^11.4.1",
     "@react-native-firebase/app": "^23.0.1",
@@ -34,6 +35,7 @@
     "react-native-maps": "^1.20.1",
     "react-native-mmkv": "^2.6.2",
     "react-native-modal": "^14.0.0-rc.1",
+    "react-native-modal-datetime-picker": "^18.0.0",
     "react-native-modalize": "^2.1.1",
     "react-native-permissions": "^5.4.0",
     "react-native-phone-number-input": "^2.1.0",

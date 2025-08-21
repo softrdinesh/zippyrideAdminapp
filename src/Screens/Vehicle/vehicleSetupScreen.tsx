@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
+  Alert,
   Keyboard,
 } from "react-native";
 import Toast from "react-native-toast-message";
@@ -83,7 +84,7 @@ const Register = () => {
       VehPicFile: "",
     },
     validationSchema,
-    onSubmit: async (values) => {
+    onSubmit: async (values, { resetForm }) => {
       try {
         const formData = new FormData();
 
@@ -114,13 +115,37 @@ const Register = () => {
         const response = await setupVehicleMutation.mutateAsync(formData);
         console.log("Vehicle Setup Response:", response);
 
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: "Vehicle setup completed successfully",
-        });
+        if (response?.code === 5999) {
+          Toast.show({
+            type: "success",
+            text1: "Success",
+            text2: response?.message || "Vehicle setup completed successfully",
+          });
 
-        // navigation.replace("Main");
+          Alert.alert(
+            "Success",
+            "Vehicle added successfully. Do you want to add another one?",
+            [
+              {
+                text: "No",
+                onPress: () => {
+                  resetForm();
+                  navigation.replace("Main"); // Navigate to the main dashboard
+                },
+                style: "cancel",
+              },
+              { text: "Yes", onPress: () => resetForm() },
+            ],
+            { cancelable: false }
+          );
+        } else {
+          Toast.show({
+            type: "error",
+            text1: "Error",
+            text2:
+              response?.message || "Failed to add vehicle. Please try again.",
+          });
+        }
       } catch (error) {
         Toast.show({
           type: "error",
