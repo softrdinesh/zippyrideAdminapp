@@ -1,47 +1,61 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  View, Text, useColorScheme, TouchableOpacity, Image, ScrollView, 
-  KeyboardAvoidingView, Platform, Dimensions, TouchableWithoutFeedback, Keyboard 
-} from 'react-native';
-import InputText from '../../uikit/InputText/InputText';
-import { Modalize } from 'react-native-modalize';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import ImagePicker from 'react-native-image-crop-picker';
-import axios from 'axios';
-import Toast from 'react-native-toast-message';
-import { Dropdown } from 'react-native-element-dropdown';
-import { StyleSheet } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import SvgBack from '../../icons/SvgBack';
-import { useUserSignupMutation } from '../../uikit/UikitUtils/Apiconfig';
-import Geolocation from '@react-native-community/geolocation';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
-import PhoneInputText from '../../uikit/PhoneInputText/PhoneInputText';
-import Loader from '../../uikit/Loader/Loader';
-import SvgEyeOutline from '../../icons/SvgEyleOutLine';
-import SvgEye from '../../icons/SvgEye';
-import Registererrormodal from './registererror';
-import RegisterSuccessModal from './registersuccess';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  View,
+  Text,
+  useColorScheme,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from "react-native";
+import InputText from "../../uikit/InputText/InputText";
+import { Modalize } from "react-native-modalize";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import ImagePicker from "react-native-image-crop-picker";
+import axios from "axios";
+import Toast from "react-native-toast-message";
+import { Dropdown } from "react-native-element-dropdown";
+import { StyleSheet } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import SvgBack from "../../icons/SvgBack";
 
-const { width, height } = Dimensions.get('window');
+import Geolocation from "@react-native-community/geolocation";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import Svg, { Path, Circle, Rect, G } from "react-native-svg";
+import { useSignup } from "../../services/api";
+
+import PhoneInputText from "../../uikit/PhoneInputText/PhoneInputText";
+import Loader from "../../uikit/Loader/Loader";
+import SvgEyeOutline from "../../icons/SvgEyleOutLine";
+import SvgEye from "../../icons/SvgEye";
+import Registererrormodal from "./registererror";
+import RegisterSuccessModal from "./registersuccess";
+import { getAxiosErrorMessage } from "../../uikit/UikitUtils/helpers";
+import SvgCameraIcon from "../../icons/SvgCameraIcon";
+
+const { width, height } = Dimensions.get("window");
 
 const Register = () => {
   const phoneInput = useRef(null);
   const [isSuccess, setSuccess] = useState(false);
   const colorScheme = useColorScheme();
   const modalizeRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(false);
   const navigation = useNavigation();
-  const [signupMutation, { isLoading: isSignupLoading }] = useUserSignupMutation();
-  const [countryCode, setCountryCode] = useState('+91');
-  const [address, setaddress] = useState("");
-  const [profilepick, setprofilepick] = useState('');
+  const { mutateAsync: signupMutation, isPending: isSignupLoading } =
+    useSignup();
+  const isLoading = isSignupLoading;
+  const [countryCode, setCountryCode] = useState("+91");
+
+  const [profilepick, setprofilepick] = useState("");
   const [hidePassword, setHidePassword] = useState(true);
   const [hidePassword1, setHidePassword1] = useState(true);
   const [isfailer, setisfailer] = useState(false);
-  const [failermessage, setfailermessage] = useState('');
+  const [failermessage, setfailermessage] = useState("");
   const useridref = useRef(null);
   const [loading, setloading] = useState(false);
   const [countrylist, setcountrylist] = useState([]);
@@ -49,19 +63,23 @@ const Register = () => {
 
   useEffect(() => {
     getCurrentLocation();
-    Countryinfo()
+    Countryinfo();
   }, []);
 
   const Countryinfo = async () => {
     try {
-      const response = await axios.get(`https://uat.zippyrideuserapi.projectpulse360.com/api/users/GetCountryList`);
-      const formattedCountries = response.data.map(country => ({
+      const response = await axios.get(
+        `https://uat.zippyrideuserapi.projectpulse360.com/api/users/GetCountryList`
+      );
+      const formattedCountries = response.data.map((country) => ({
         label: country.countryName,
-        value: country.countryid
+        value: country.countryid,
       }));
+      console.log(formattedCountries, "formattedCountries");
+
       setcountrylist(formattedCountries);
     } catch (error) {
-      console.error('Error fetching user info:', error);
+      console.error("Error fetching user info:", error);
     }
   };
   const getCurrentLocation = async () => {
@@ -70,7 +88,7 @@ const Register = () => {
         const { latitude, longitude } = position.coords;
       },
       (error) => {
-        console.error('Error getting location:', error);
+        console.error("Error getting location:", error);
       },
       {
         enableHighAccuracy: true,
@@ -81,97 +99,89 @@ const Register = () => {
   };
 
   const SignUpSchema = Yup.object().shape({
-    username: Yup.string().required('Name is required'),
-    companyname: Yup.string().required('Company name is required'),
+    username: Yup.string().required("Name is required"),
+    companyname: Yup.string().required("Company name is required"),
     telegarmid: Yup.string(),
     password: Yup.string()
-      .min(8, 'Password must be at least 8 characters').max(15, 'Password Max is 15 characters')
+      .min(8, "Password must be at least 8 characters")
+      .max(15, "Password Max is 15 characters")
       // .matches(
       //   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/,
       //   'Password must contain at least one uppercase letter, one lowercase letter, and one digit'
       // )
-      .required('Password is required'),
+      .required("Password is required"),
     confirmPassword: Yup.string()
-      .oneOf([Yup.ref('password'), null], 'Passwords must match')
-      .required('Confirm Password is required'),
-    mobileno: Yup.string().required('Mobile Number is required'),
+      .oneOf([Yup.ref("password"), null], "Passwords must match")
+      .required("Confirm Password is required"),
+    mobileno: Yup.string().required("Mobile Number is required"),
     whatsappno: Yup.string(),
-    address: Yup.string().required('Address is required'),
-    country: Yup.string().required('Country is required'),
+    address: Yup.string().required("Address is required"),
+    country: Yup.string().required("Country is required"),
+    profilepick: Yup.string().required("Profile image is required"),
   });
 
   const formik = useFormik({
     initialValues: {
-      username: '',
-      companyname: '',
-      telegarmid: '',
-      password: '',
-      confirmPassword: '',
-      whatsappno: '',
-      mobileno: '',
-      address: '',
-      country: '',
+      username: "",
+      companyname: "",
+      telegarmid: "",
+      password: "",
+      confirmPassword: "",
+      whatsappno: "",
+      mobileno: "",
+      address: "",
+      country: "",
+      profilepick: "",
       // location: ''
     },
     validationSchema: SignUpSchema,
     onSubmit: async (values) => {
-      console.log('called')
       setloading(true);
       try {
-        const payload = {
-           username: values.username,
-           companyname: values.companyname,
-           telegarmid: values.telegarmid,
-          mobileno: values.mobileno,
-          address: values.address,
-          whatsappno: values.whatsappno,
-          password: values.password,
-           profilepic: "",
-          // locationID: values.location == '' ? 0 : values.location,
-          countryID: values.country == '' ? 0 : values.country,
-          // otp: "SU"
+        const formdata = new FormData();
+        formdata.append("Profilepic", "");
+        formdata.append("Mobileno", values.mobileno);
+        formdata.append("Companyname", values.companyname);
+        formdata.append("CountryID", values.country);
+        formdata.append("Whatsappno", values.whatsappno);
+        // Attach image if selected, with dynamic name and type
+        if (values.profilepick) {
+          const imageName = values.profilepick.split("/").pop();
+          const ext = imageName.split(".").pop();
+          const imageType = ext ? `image/${ext}` : "image";
+          formdata.append("OwnerPicFile", {
+            uri: values.profilepick,
+            name: imageName,
+            type: imageType,
+          });
+        }
+        formdata.append("Address", values.address);
+        formdata.append("Username", values.username);
+        formdata.append("Telegarmid", values.telegarmid);
+        formdata.append("Password", values.password);
+        console.log("Form data:", formdata);
 
-    
-  // username: "dhamu",
-  // password: "Dhamu1234",
-  // address: "tee",
-  // mobileno: "123456",
-  // whatsappno: "123456",
-  // telegarmid: "123456",
-  // profilepic: "",
-  // companyname: "test",
-  // countryID: 1
+        const response = await signupMutation(formdata);
 
-
-       
-        };
-        //const response = await signupMutation(payload);
-             const response = await axios.post(`https://uat.zippyrideadminapi.projectpulse360.com/OwnerSignup`, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-          // Add any other headers if needed
-        },
-      });
-      console.log(response.data,'responsie')
-        if (response.error) {
-          setisfailer(true);
-          setfailermessage(response.error.data.message);
-        } else {
-          useridref.current = response.data.userId;
+        if (response && response.ownerID) {
+          useridref.current = response.ownerID;
           setSuccess(true);
-        
+        } else {
+          setisfailer(true);
+          setfailermessage(response?.message || "Signup failed");
         }
       } catch (error) {
-        console.error('Signup failed:', error);
+        console.error("Signup failed:", error);
+        setisfailer(true);
+        setfailermessage(getAxiosErrorMessage(error));
       } finally {
         setloading(false);
       }
     },
   });
 
-
   //   if (!image || !useridref.current) return;
-    
+
   //   setIsLoading(true);
   //   try {
   //     const formData = new FormData();
@@ -199,7 +209,7 @@ const Register = () => {
   // };
 
   const handleClose = () => {
-    navigation.navigate('Login');
+    navigation.navigate("Login");
     setSuccess(false);
     formik.resetForm();
   };
@@ -223,27 +233,29 @@ const Register = () => {
         height: 400,
         cropping: true,
         multiple: false,
-        mediaType: 'photo',
+        mediaType: "photo",
       };
 
-      const image = source === 'camera' 
-        ? await ImagePicker.openCamera(options)
-        : await ImagePicker.openPicker(options);
-      
+      const image =
+        source === "camera"
+          ? await ImagePicker.openCamera(options)
+          : await ImagePicker.openPicker(options);
+
       if (image) {
         setprofilepick(image.path);
+        formik.setFieldValue("profilepick", image.path);
         if (useridref.current) {
           await uploadProfileImage(image);
         }
       }
       onClose();
     } catch (error) {
-      console.log('Image selection error:', error);
-      if (error.code !== 'E_PICKER_CANCELLED') {
+      console.log("Image selection error:", error);
+      if (error.code !== "E_PICKER_CANCELLED") {
         Toast.show({
-          type: 'error',
-          text1: 'Error selecting image',
-          text2: error.message || 'Please try again',
+          type: "error",
+          text1: "Error selecting image",
+          text2: error.message || "Please try again",
         });
       }
     }
@@ -251,80 +263,90 @@ const Register = () => {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
+        {isSignupLoading && <Loader />}
         {loading && <Loader />}
         {isLoading && <Loader />}
-  <RegisterSuccessModal open={isSuccess} close={handleClose} />
-        <Registererrormodal open={isfailer} close={handleClose1} message={failermessage} />
+
+        <RegisterSuccessModal open={isSuccess} close={handleClose} />
+        <Registererrormodal
+          open={isfailer}
+          close={handleClose1}
+          message={failermessage}
+        />
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={styles.contentContainer}
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.header}>
-              <TouchableOpacity 
-                onPress={() => navigation.goBack()} 
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
                 // style={styles.backButton}
-               // hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
+                // hitSlop={{top: 20, bottom: 20, left: 20, right: 20}}
               >
                 <SvgBack height={15} width={15} />
               </TouchableOpacity>
               <Text style={styles.title}>Create Account</Text>
-              <View style={{width: 24}} />
+              <View style={{ width: 24 }} />
             </View>
 
             <View style={styles.profileSection}>
-              <TouchableOpacity 
-                style={styles.profilePhotoContainer} 
+              <TouchableOpacity
+                style={styles.profilePhotoContainer}
                 onPress={onOpen}
                 activeOpacity={0.8}
               >
-                <Image 
-                  source={profilepick ? { uri: profilepick } : require('../../assets/camera12.png')} 
-                  style={styles.profilePhoto} 
+                <Image
+                  source={
+                    profilepick
+                      ? { uri: profilepick }
+                      : require("../../assets/camera12.png")
+                  }
+                  style={styles.profilePhoto}
                 />
                 <View style={styles.cameraIcon}>
-                  <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-                    <Path d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z" stroke="white" strokeWidth="2"/>
-                    <Path d="M3 16.8V7.2C3 6.0799 3 5.51984 3.21799 5.09202C3.40973 4.71569 3.71569 4.40973 4.09202 4.21799C4.51984 4 5.0799 4 6.2 4H7.25464C7.37758 4 7.43905 4 7.49576 3.9935C7.79166 3.95961 8.05705 3.79559 8.21969 3.54609C8.25086 3.49827 8.27836 3.44433 8.33333 3.33646L8.8 2.5C8.9561 2.19094 9.03415 2.03642 9.1366 1.90703C9.38462 1.60087 9.72956 1.38525 10.1161 1.29572C10.2745 1.2607 10.4387 1.2607 10.7672 1.2607H13.2328C13.5613 1.2607 13.7255 1.2607 13.8839 1.29572C14.2704 1.38525 14.6154 1.60087 14.8634 1.90703C14.9658 2.03642 15.0439 2.19094 15.2 2.5L15.6667 3.33646C15.7216 3.44433 15.7491 3.49827 15.7803 3.54609C15.943 3.79559 16.2083 3.95961 16.5042 3.9935C16.561 4 16.6224 4 16.7454 4H17.8C18.9201 4 19.4802 4 19.908 4.21799C20.2843 4.40973 20.5903 4.71569 20.782 5.09202C21 5.51984 21 6.0799 21 7.2V16.8C21 17.9201 21 18.4802 20.782 18.908C20.5903 19.2843 20.2843 19.5903 19.908 19.782C19.4802 20 18.9201 20 17.8 20H6.2C5.0799 20 4.51984 20 4.09202 19.782C3.71569 19.5903 3.40973 19.2843 3.21799 18.908C3 18.4802 3 17.9201 3 16.8Z" stroke="white" strokeWidth="2"/>
-                  </Svg>
+                  <SvgCameraIcon />
                 </View>
               </TouchableOpacity>
               <Text style={styles.profileText}>Add Profile Photo</Text>
+              {formik.touched.profilepick && formik.errors.profilepick && (
+                <Text style={styles.errorText}>
+                  {formik.errors.profilepick}
+                </Text>
+              )}
             </View>
 
             <View style={styles.formContainer}>
               <Text style={styles.label}>Full Name</Text>
               <InputText
-                name={'username'}
+                name={"username"}
                 touched={formik.touched}
                 errors={formik.errors}
                 error={formik.errors.username && formik.touched.username}
                 maxLength={20}
                 placeholder="Enter your full name"
                 value={formik.values.username}
-                onChange={formik.handleChange('username')}
+                onChange={formik.handleChange("username")}
                 containerStyle={styles.input}
               />
 
               <Text style={styles.label}>Company Name</Text>
               <InputText
-                name={'companyname'}
+                name={"companyname"}
                 touched={formik.touched}
                 errors={formik.errors}
                 error={formik.errors.companyname && formik.touched.companyname}
                 maxLength={50}
                 placeholder="Enter your company name"
                 value={formik.values.companyname}
-                onChange={formik.handleChange('companyname')}
+                onChange={formik.handleChange("companyname")}
                 containerStyle={styles.input}
               />
-
-              
 
               <View style={styles.passwordRow}>
                 <View style={styles.passwordColumn}>
@@ -333,16 +355,16 @@ const Register = () => {
                     maxLength={30}
                     placeholder="Create password"
                     value={formik.values.password}
-                    onChange={formik.handleChange('password')}
-                    name={'password'}
+                    onChange={formik.handleChange("password")}
+                    name={"password"}
                     touched={formik.touched}
                     errors={formik.errors}
                     error={formik.errors.password && formik.touched.password}
                     secureTextEntry={hidePassword}
                     actionRight={() => (
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         onPress={() => setHidePassword(!hidePassword)}
-                        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                       >
                         {hidePassword ? <SvgEyeOutline /> : <SvgEye />}
                       </TouchableOpacity>
@@ -357,16 +379,19 @@ const Register = () => {
                     maxLength={30}
                     placeholder="Confirm password"
                     value={formik.values.confirmPassword}
-                    onChange={formik.handleChange('confirmPassword')}
-                    name={'confirmPassword'}
+                    onChange={formik.handleChange("confirmPassword")}
+                    name={"confirmPassword"}
                     touched={formik.touched}
                     errors={formik.errors}
-                    error={formik.errors.confirmPassword && formik.touched.confirmPassword}
+                    error={
+                      formik.errors.confirmPassword &&
+                      formik.touched.confirmPassword
+                    }
                     secureTextEntry={hidePassword1}
                     actionRight={() => (
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         onPress={() => setHidePassword1(!hidePassword1)}
-                        hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                       >
                         {hidePassword1 ? <SvgEyeOutline /> : <SvgEye />}
                       </TouchableOpacity>
@@ -380,15 +405,15 @@ const Register = () => {
               <PhoneInputText
                 ref={phoneInput}
                 placeholder="Enter mobile number"
-                name={'mobileno'}
+                name={"mobileno"}
                 error={formik.errors.mobileno && formik.touched.mobileno}
-                onChangeCountry={val => {
-                  setCountryCode('+' + val.callingCode[0]);
+                onChangeCountry={(val) => {
+                  setCountryCode("+" + val.callingCode[0]);
                 }}
                 value={formik.values.mobileno}
-                onChange={text => {
-                  const numericValue = text.replace(/[^0-9+]/g, '');
-                  formik.handleChange('mobileno')(numericValue);
+                onChange={(text) => {
+                  const numericValue = text.replace(/[^0-9+]/g, "");
+                  formik.handleChange("mobileno")(numericValue);
                 }}
                 containerStyle={styles.phoneInput}
               />
@@ -400,15 +425,15 @@ const Register = () => {
               <PhoneInputText
                 ref={phoneInput}
                 placeholder="Enter Whatsapp number"
-                name={'whatsappno'}
+                name={"whatsappno"}
                 error={formik.errors.whatsappno && formik.touched.whatsappno}
-                onChangeCountry={val => {
-                  setCountryCode('+' + val.callingCode[0]);
+                onChangeCountry={(val) => {
+                  setCountryCode("+" + val.callingCode[0]);
                 }}
                 value={formik.values.whatsappno}
-                onChange={text => {
-                  const numericValue = text.replace(/[^0-9+]/g, '');
-                  formik.handleChange('whatsappno')(numericValue);
+                onChange={(text) => {
+                  const numericValue = text.replace(/[^0-9+]/g, "");
+                  formik.handleChange("whatsappno")(numericValue);
                 }}
                 containerStyle={styles.phoneInput}
               />
@@ -418,37 +443,39 @@ const Register = () => {
 
               <Text style={styles.label}>Address</Text>
               <InputText
-                overrideStyle={{textAlignVertical: 'top'}}
+                overrideStyle={{ textAlignVertical: "top" }}
                 height={100}
                 numberOfLines={4}
                 multiline
                 maxLength={4000}
                 placeholder="Enter your address"
                 value={formik.values.address}
-                onChange={formik.handleChange('address')}
-                name={'address'}
+                onChange={formik.handleChange("address")}
+                name={"address"}
                 touched={formik.touched}
                 errors={formik.errors}
                 error={formik.errors.address && formik.touched.address}
                 containerStyle={[styles.input, styles.addressInput]}
               />
-<Text style={styles.label}>Telegram ID (Optional)</Text>
+              <Text style={styles.label}>Telegram ID (Optional)</Text>
               <InputText
-                name={'telegarmid'}
+                name={"telegarmid"}
                 touched={formik.touched}
                 errors={formik.errors}
                 error={formik.errors.telegarmid && formik.touched.telegarmid}
                 maxLength={50}
                 placeholder="Enter your Telegram username"
                 value={formik.values.telegarmid}
-                onChange={formik.handleChange('telegarmid')}
+                onChange={formik.handleChange("telegarmid")}
                 containerStyle={styles.input}
               />
               <Text style={styles.label}>Country</Text>
               <Dropdown
                 style={[
-                  styles.dropdown, 
-                  formik.errors.country && formik.touched.country && styles.errorBorder
+                  styles.dropdown,
+                  formik.errors.country &&
+                    formik.touched.country &&
+                    styles.errorBorder,
                 ]}
                 placeholderStyle={styles.placeholderStyle}
                 selectedTextStyle={styles.selectedTextStyle}
@@ -462,7 +489,7 @@ const Register = () => {
                 placeholder="Select country"
                 searchPlaceholder="Search country..."
                 value={formik.values.country}
-                onChange={(item) => formik.setFieldValue('country', item.value)}
+                onChange={(item) => formik.setFieldValue("country", item.value)}
                 itemTextStyle={styles.dropdownItemText}
                 activeColor="#f5f5f5"
               />
@@ -470,25 +497,23 @@ const Register = () => {
                 <Text style={styles.errorText}>{formik.errors.country}</Text>
               )}
 
-              
-
               <Text style={styles.termsText}>
-                By signing up, you agree to our{' '}
-                <Text style={styles.link}>Terms of Service</Text> and{' '}
+                By signing up, you agree to our{" "}
+                <Text style={styles.link}>Terms of Service</Text> and{" "}
                 <Text style={styles.link}>Privacy Policy</Text>
               </Text>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[
-                  styles.button, 
-                //  (!formik.isValid || isSignupLoading) && styles.buttonDisabled
-                ]} 
+                  styles.button,
+                  //  (!formik.isValid || isSignupLoading) && styles.buttonDisabled
+                ]}
                 onPress={formik.handleSubmit}
                 activeOpacity={0.8}
-             //   disabled={!formik.isValid || isSignupLoading}
+                //   disabled={!formik.isValid || isSignupLoading}
               >
                 <Text style={styles.buttonText}>
-                  {isSignupLoading ? 'Creating Account...' : 'Create Account'}
+                  {isSignupLoading ? "Creating Account..." : "Create Account"}
                 </Text>
               </TouchableOpacity>
 
@@ -501,9 +526,9 @@ const Register = () => {
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
-        
-        <Modalize 
-          ref={modalizeRef} 
+
+        <Modalize
+          ref={modalizeRef}
           modalHeight={height * 0.25}
           adjustToContentHeight={false}
           withHandle={true}
@@ -513,33 +538,50 @@ const Register = () => {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalOptions}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.modalOption}
-                onPress={() => handleImageSelection('camera')}
+                onPress={() => handleImageSelection("camera")}
                 disabled={isLoading}
                 activeOpacity={0.8}
               >
                 <View style={styles.modalIcon}>
                   <Svg width={48} height={48} viewBox="0 0 48 48" fill="none">
-                    <Circle cx="24" cy="24" r="24" fill="#F6A000"/>
-                    <Path d="M16 20C16 18.8954 16.8954 18 18 18H19L20.4472 16.1056C20.7865 15.6322 21.3704 15.3333 22 15.3333H26C26.6296 15.3333 27.2135 15.6322 27.5528 16.1056L29 18H30C31.1046 18 32 18.8954 32 20V28C32 29.1046 31.1046 30 30 30H18C16.8954 30 16 29.1046 16 28V20Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <Path d="M24 27C25.6569 27 27 25.6569 27 24C27 22.3431 25.6569 21 24 21C22.3431 21 21 22.3431 21 24C21 25.6569 22.3431 27 24 27Z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <Circle cx="24" cy="24" r="24" fill="#F6A000" />
+                    <Path
+                      d="M16 20C16 18.8954 16.8954 18 18 18H19L20.4472 16.1056C20.7865 15.6322 21.3704 15.3333 22 15.3333H26C26.6296 15.3333 27.2135 15.6322 27.5528 16.1056L29 18H30C31.1046 18 32 18.8954 32 20V28C32 29.1046 31.1046 30 30 30H18C16.8954 30 16 29.1046 16 28V20Z"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <Path
+                      d="M24 27C25.6569 27 27 25.6569 27 24C27 22.3431 25.6569 21 24 21C22.3431 21 21 22.3431 21 24C21 25.6569 22.3431 27 24 27Z"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </Svg>
                 </View>
                 <Text style={styles.modalOptionText}>Take Photo</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.modalOption}
-                onPress={() => handleImageSelection('gallery')}
+                onPress={() => handleImageSelection("gallery")}
                 disabled={isLoading}
                 activeOpacity={0.8}
               >
                 <View style={styles.modalIcon}>
                   <Svg width={48} height={48} viewBox="0 0 48 48" fill="none">
-                    <Circle cx="24" cy="24" r="24" fill="#F6A000"/>
+                    <Circle cx="24" cy="24" r="24" fill="#F6A000" />
                     <G transform="translate(13, 14.5)">
-                      <Path d="M0 2.71429C0 1.99441 0.289731 1.30402 0.805456 0.794996C1.32118 0.285969 2.02065 0 2.75 0H19.25C19.9793 0 20.6788 0.285969 21.1945 0.794996C21.7103 1.30402 22 1.99441 22 2.71429V16.2857C22 17.0056 21.7103 17.696 21.1945 18.205C20.6788 18.714 19.9793 19 19.25 19H2.75C2.02065 19 1.32118 18.714 0.805456 18.205C0.289731 17.696 0 17.0056 0 16.2857V2.71429ZM1.375 14.9286V16.2857C1.375 16.6457 1.51987 16.9908 1.77773 17.2454C2.03559 17.4999 2.38533 17.6429 2.75 17.6429H19.25C19.6147 17.6429 19.9644 17.4999 20.2223 17.2454C20.4801 16.9908 20.625 16.6457 20.625 16.2857V11.5357L15.4316 8.89336C15.3027 8.8296 15.1567 8.80749 15.0143 8.83014C14.8719 8.85279 14.7404 8.91906 14.6383 9.01957L9.537 14.0546L5.8795 11.6497C5.74745 11.5629 5.58905 11.5239 5.43117 11.5392C5.27328 11.5546 5.12563 11.6233 5.01325 11.7339L1.375 14.9286ZM8.25 6.10714C8.25 5.56724 8.0327 5.04945 7.64591 4.66768C7.25911 4.2859 6.73451 4.07143 6.1875 4.07143C5.64049 4.07143 5.11589 4.2859 4.72909 4.66768C4.3423 5.04945 4.125 5.56724 4.125 6.10714C4.125 6.64705 4.3423 7.16484 4.72909 7.54661C5.11589 7.92838 5.64049 8.14286 6.1875 8.14286C6.73451 8.14286 7.25911 7.92838 7.64591 7.54661C8.0327 7.16484 8.25 6.64705 8.25 6.10714Z" fill="white" strokeLinecap="round" strokeLinejoin="round"/>
+                      <Path
+                        d="M0 2.71429C0 1.99441 0.289731 1.30402 0.805456 0.794996C1.32118 0.285969 2.02065 0 2.75 0H19.25C19.9793 0 20.6788 0.285969 21.1945 0.794996C21.7103 1.30402 22 1.99441 22 2.71429V16.2857C22 17.0056 21.7103 17.696 21.1945 18.205C20.6788 18.714 19.9793 19 19.25 19H2.75C2.02065 19 1.32118 18.714 0.805456 18.205C0.289731 17.696 0 17.0056 0 16.2857V2.71429ZM1.375 14.9286V16.2857C1.375 16.6457 1.51987 16.9908 1.77773 17.2454C2.03559 17.4999 2.38533 17.6429 2.75 17.6429H19.25C19.6147 17.6429 19.9644 17.4999 20.2223 17.2454C20.4801 16.9908 20.625 16.6457 20.625 16.2857V11.5357L15.4316 8.89336C15.3027 8.8296 15.1567 8.80749 15.0143 8.83014C14.8719 8.85279 14.7404 8.91906 14.6383 9.01957L9.537 14.0546L5.8795 11.6497C5.74745 11.5629 5.58905 11.5239 5.43117 11.5392C5.27328 11.5546 5.12563 11.6233 5.01325 11.7339L1.375 14.9286ZM8.25 6.10714C8.25 5.56724 8.0327 5.04945 7.64591 4.66768C7.25911 4.2859 6.73451 4.07143 6.1875 4.07143C5.64049 4.07143 5.11589 4.2859 4.72909 4.66768C4.3423 5.04945 4.125 5.56724 4.125 6.10714C4.125 6.64705 4.3423 7.16484 4.72909 7.54661C5.11589 7.92838 5.64049 8.14286 6.1875 8.14286C6.73451 8.14286 7.25911 7.92838 7.64591 7.54661C8.0327 7.16484 8.25 6.64705 8.25 6.10714Z"
+                        fill="white"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </G>
                   </Svg>
                 </View>
@@ -556,80 +598,80 @@ const Register = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   contentContainer: {
-    paddingBottom: 40
+    paddingBottom: 40,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 24,
     paddingTop: 24,
     paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF'
+    borderBottomColor: "#E9ECEF",
   },
   backButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: '#F1F3F5'
+    backgroundColor: "#F1F3F5",
   },
   title: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#212529',
-    textAlign: 'center',
+    fontWeight: "600",
+    color: "#212529",
+    textAlign: "center",
     flex: 1,
-    fontFamily: 'System'
+    fontFamily: "System",
   },
   profileSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 24,
-    paddingHorizontal: 24
+    paddingHorizontal: 24,
   },
   profilePhotoContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#E9ECEF',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#E9ECEF",
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 2,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
+    borderColor: "#FFFFFF",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
-    position: 'relative',
+    position: "relative",
   },
   profilePhoto: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
     borderRadius: 60,
   },
   cameraIcon: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: '#F6A000',
+    backgroundColor: "#F6A000",
     width: 36,
     height: 36,
     borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: "#FFFFFF",
   },
   profileText: {
     fontSize: 14,
-    color: '#495057',
+    color: "#495057",
     marginTop: 12,
-    fontWeight: '500',
-    fontFamily: 'System'
+    fontWeight: "500",
+    fontFamily: "System",
   },
   formContainer: {
     paddingHorizontal: 24,
@@ -637,38 +679,38 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
-    color: '#343A40',
+    fontWeight: "500",
+    color: "#343A40",
     marginBottom: 8,
     marginTop: 12,
-    fontFamily: 'System'
+    fontFamily: "System",
   },
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: '#DEE2E6',
+    borderColor: "#DEE2E6",
     borderRadius: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
   passwordRow: {
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    marginBottom: 8
+    flexDirection: "column",
+    justifyContent: "space-between",
+    marginBottom: 8,
   },
   passwordColumn: {
-    width: '100%'
+    width: "100%",
   },
   phoneInput: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: '#DEE2E6',
+    borderColor: "#DEE2E6",
     borderRadius: 8,
     height: 50,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -680,13 +722,13 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     height: 50,
-    borderColor: '#DEE2E6',
+    borderColor: "#DEE2E6",
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     marginBottom: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -694,97 +736,97 @@ const styles = StyleSheet.create({
   },
   placeholderStyle: {
     fontSize: 14,
-    color: '#ADB5BD',
-    fontFamily: 'System'
+    color: "#ADB5BD",
+    fontFamily: "System",
   },
   selectedTextStyle: {
     fontSize: 14,
-    color: '#212529',
-    fontFamily: 'System'
+    color: "#212529",
+    fontFamily: "System",
   },
   inputSearchStyle: {
     height: 40,
     fontSize: 14,
-    color: '#212529',
-    backgroundColor: '#FFFFFF',
-    fontFamily: 'System'
+    color: "#212529",
+    backgroundColor: "#FFFFFF",
+    fontFamily: "System",
   },
   dropdownItemText: {
     fontSize: 14,
-    color: '#212529',
-    fontFamily: 'System'
+    color: "#212529",
+    fontFamily: "System",
   },
   iconStyle: {
     width: 24,
     height: 24,
   },
   errorBorder: {
-    borderColor: '#FA5252',
+    borderColor: "#FA5252",
   },
   errorText: {
-    color: '#FA5252',
+    color: "#FA5252",
     fontSize: 12,
     marginLeft: 8,
     marginTop: 4,
     marginBottom: 8,
-    fontFamily: 'System'
+    fontFamily: "System",
   },
   termsText: {
     fontSize: 12,
-    color: '#868E96',
-    textAlign: 'center',
+    color: "#868E96",
+    textAlign: "center",
     marginVertical: 16,
     lineHeight: 18,
-    fontFamily: 'System'
+    fontFamily: "System",
   },
   link: {
-    color: '#4267B2',
-    fontWeight: '600',
+    color: "#4267B2",
+    fontWeight: "600",
   },
   button: {
-    backgroundColor: '#4267B2',
+    backgroundColor: "#4267B2",
     paddingVertical: 16,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 16,
-    shadowColor: '#4267B2',
+    shadowColor: "#4267B2",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
   buttonDisabled: {
-    backgroundColor: '#ADB5BD',
+    backgroundColor: "#ADB5BD",
     opacity: 0.7,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'System'
+    fontWeight: "600",
+    fontFamily: "System",
   },
   loginPrompt: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: 24,
   },
   loginText: {
     fontSize: 14,
-    color: '#495057',
-    fontFamily: 'System'
+    color: "#495057",
+    fontFamily: "System",
   },
   loginLink: {
     fontSize: 14,
-    color: '#4267B2',
-    fontWeight: '600',
-    fontFamily: 'System'
+    color: "#4267B2",
+    fontWeight: "600",
+    fontFamily: "System",
   },
   modalStyle: {
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -793,33 +835,33 @@ const styles = StyleSheet.create({
   modalHandle: {
     width: 40,
     height: 4,
-    backgroundColor: '#E9ECEF',
+    backgroundColor: "#E9ECEF",
     borderRadius: 2,
     marginTop: 12,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
   modalContent: {
     padding: 24,
     paddingBottom: 32,
   },
   modalOptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     marginTop: 16,
   },
   modalOption: {
-    alignItems: 'center',
-    width: '40%',
+    alignItems: "center",
+    width: "40%",
   },
   modalIcon: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#F6A000',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#F6A000",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -827,10 +869,10 @@ const styles = StyleSheet.create({
   },
   modalOptionText: {
     fontSize: 14,
-    color: '#212529',
-    fontWeight: '500',
-    textAlign: 'center',
-    fontFamily: 'System'
+    color: "#212529",
+    fontWeight: "500",
+    textAlign: "center",
+    fontFamily: "System",
   },
 });
 
