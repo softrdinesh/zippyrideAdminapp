@@ -4,15 +4,13 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { enableScreens } from "react-native-screens";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthNavigator } from "./src/navigation/AuthNavigator";
-import BottomTabs from "./src/navigation/Bottomtabs";
-
-import Navbar from "./src/Screens/Navbar/Navbar";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "./src/zustand/useAuthStore";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import VehicleSetup from "./src/Screens/Vehicle/vehicleSetupScreen";
 import Toast from "react-native-toast-message";
+import { MainDrawer } from "./src/navigation/DrawerNavigation";
 
 enableScreens();
 
@@ -45,12 +43,7 @@ const NavigationRoot = () => {
       ) : (
         // Protected screens
         <>
-          <Stack.Screen
-            name="Main"
-            component={BottomTabs}
-            options={{ gestureEnabled: false }}
-          />
-          <Stack.Screen name="Navbar" component={Navbar} />
+          <Stack.Screen name="Main" component={MainDrawer} />
         </>
       )}
     </Stack.Navigator>
