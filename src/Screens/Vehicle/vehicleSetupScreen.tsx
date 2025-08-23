@@ -18,7 +18,11 @@ import { useNavigation } from "@react-navigation/native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useGetVehicleColors, useSetupVehicle } from "../../services/api";
+import {
+  useGetVehicleColors,
+  useGetVehicleTypes,
+  useSetupVehicle,
+} from "../../services/api";
 
 import Loader from "../../uikit/Loader/Loader";
 import { getAxiosErrorMessage } from "../../uikit/UikitUtils/helpers";
@@ -44,13 +48,14 @@ const validationSchema = Yup.object().shape({
     .max(20, "Engine number must be at most 20 characters")
     .required("Engine number is required"),
   VehName: Yup.string().required("Vehicle name is required"),
+  VehTypeId: Yup.number().required("Type is required"),
   VehcolorId: Yup.number().required("Vehicle color is required"),
   Others: Yup.string().max(500, "Remarks must be at most 500 characters"),
   FcexpiryDate: Yup.date().required("FC expiry date is required"),
   VehPicFile: Yup.string().required("Vehicle image is required"),
 });
 
-const Register = () => {
+const VehicleSetupScreen = () => {
   const navigation = useNavigation();
   const modalRef = useRef(null);
 
@@ -61,8 +66,9 @@ const Register = () => {
   });
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
 
-  const { ownerProfile } = useAuthStore();
+  const { ownerProfile, setIsVehicleTag } = useAuthStore();
   const { data: colors, isLoading: isLoadingColors } = useGetVehicleColors();
+  const { data: types, isLoading: isLoadingTypes } = useGetVehicleTypes();
   const setupVehicleMutation = useSetupVehicle();
 
   const isLoading = setupVehicleMutation.isPending || isLoadingColors;
@@ -74,6 +80,7 @@ const Register = () => {
       EngineNo: "",
       VehName: "",
       VehcolorId: "",
+      VehTypeId: "",
       IsHybrid: false,
       IsPetrolVech: false,
       IsCngenabled: false,
@@ -130,7 +137,7 @@ const Register = () => {
                 text: "No",
                 onPress: () => {
                   resetForm();
-                  navigation.replace("Main"); // Navigate to the main dashboard
+                  setIsVehicleTag(true);
                 },
                 style: "cancel",
               },
@@ -246,6 +253,35 @@ const Register = () => {
               onChange={formik.handleChange("Vehno")}
               containerStyle={styles.input}
             />
+            <Text style={styles.label}>Type</Text>
+            <Dropdown
+              style={[
+                styles.dropdown,
+                formik.touched.VehTypeId && formik.errors.VehTypeId
+                  ? styles.errorBorder
+                  : undefined,
+              ]}
+              placeholderStyle={styles.placeholderStyle}
+              selectedTextStyle={styles.selectedTextStyle}
+              inputSearchStyle={styles.inputSearchStyle}
+              iconStyle={styles.iconStyle}
+              data={types || []}
+              search
+              maxHeight={300}
+              labelField="vehTypeName"
+              valueField="typeId"
+              placeholder="Select type"
+              searchPlaceholder="Search type..."
+              value={formik.values.VehTypeId}
+              onChange={(item) =>
+                formik.setFieldValue("VehTypeId", item.typeId)
+              }
+              itemTextStyle={styles.dropdownItemText}
+              activeColor="#f5f5f5"
+            />
+            {formik.touched.VehTypeId && formik.errors.VehTypeId && (
+              <Text style={styles.errorText}>{formik.errors.VehTypeId}</Text>
+            )}
             <Text style={styles.label}>Color</Text>
             <Dropdown
               style={[
@@ -294,7 +330,7 @@ const Register = () => {
               touched={formik.touched}
               errors={formik.errors}
               error={formik.errors.Chasisno && formik.touched.Chasisno}
-              maxLength={8}
+              maxLength={20}
               placeholder="Enter your chasis number"
               value={formik.values.Chasisno}
               onChange={formik.handleChange("Chasisno")}
@@ -346,6 +382,7 @@ const Register = () => {
               containerStyle={[styles.input, styles.addressInput]}
             />
             <View style={styles.vehicleCheckboxes}>
+              <Text style={styles.label}>Vehicle Type</Text>
               <CheckBox
                 label={"EV"}
                 checked={formik.values.IsEv}
@@ -415,13 +452,6 @@ const Register = () => {
                   : "Submit Vehicle Details"}
               </Text>
             </TouchableOpacity>
-
-            <View style={styles.loginPrompt}>
-              <Text style={styles.loginText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-                <Text style={styles.loginLink}>Log in</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
@@ -691,4 +721,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Register;
+export default VehicleSetupScreen;
