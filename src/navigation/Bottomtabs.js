@@ -1,7 +1,7 @@
 import React from "react";
 import { Text } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createStackNavigator } from "@react-navigation/stack";
 import { getFocusedRouteNameFromRoute } from "@react-navigation/native";
 import SvgHome from "../icons/SvgHome";
 import SvgUser from "../icons/SvgUser";
@@ -10,7 +10,8 @@ import Landingpage from "../Screens/landingScreen";
 import Login from "../Screens/Auth/Login";
 import ProfileScreen from "../Screens/Profile/profileScreen";
 const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
+
 function HomeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>

@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createStackNavigator } from "@react-navigation/stack";
 import { enableScreens } from "react-native-screens";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthNavigator } from "./src/navigation/AuthNavigator";
@@ -14,7 +14,7 @@ import { MainDrawer } from "./src/navigation/DrawerNavigation";
 
 enableScreens();
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 const queryClient = new QueryClient({
   defaultOptions: {
