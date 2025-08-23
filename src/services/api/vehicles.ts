@@ -6,6 +6,17 @@ interface VehicleColor {
   colname: string;
   isActive: boolean;
 }
+interface VehicleType {
+  typeId: number;
+  vehTypeName: string;
+  createDate: string | null;
+  updateDate: string | null;
+  updateby: string | null;
+  isEv: string | null;
+  isHybrid: string | null;
+  noOfPassengersAllowed: number;
+  vehicleInfo: Array<any>;
+}
 
 interface VehicleSetupPayload {
   Chasisno: string;
@@ -32,6 +43,12 @@ export const useGetVehicleColors = () => {
   return useQuery<VehicleColor[]>({
     queryKey: ["vehicleColors"],
     queryFn: () => api.get("api/Vehicles/GetVehicleColors"),
+  });
+};
+export const useGetVehicleTypes = () => {
+  return useQuery<VehicleType[]>({
+    queryKey: ["vehicleTypes"],
+    queryFn: () => api.get("api/Vehicles/GetVehicleTypes"),
   });
 };
 
