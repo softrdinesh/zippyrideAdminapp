@@ -138,6 +138,7 @@ const VehicleSetupScreen = () => {
                 onPress: () => {
                   resetForm();
                   setIsVehicleTag(true);
+                  navigation.goBack();
                 },
                 style: "cancel",
               },
@@ -199,10 +200,6 @@ const VehicleSetupScreen = () => {
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.header}>
-            <Text style={styles.title}>Add Vehicle</Text>
-          </View>
-
           <View style={styles.profileSection}>
             <TouchableOpacity
               style={styles.vehicleImageContainer}
@@ -382,7 +379,6 @@ const VehicleSetupScreen = () => {
               containerStyle={[styles.input, styles.addressInput]}
             />
             <View style={styles.vehicleCheckboxes}>
-              <Text style={styles.label}>Vehicle Type</Text>
               <CheckBox
                 label={"EV"}
                 checked={formik.values.IsEv}
@@ -404,7 +400,7 @@ const VehicleSetupScreen = () => {
                 }}
               />
               <CheckBox
-                label={"Pertrol"}
+                label={"Petrol"}
                 disabled={formik.values.IsEv || formik.values.IsDesielvech}
                 checked={formik.values.IsPetrolVech}
                 onClick={() => {
