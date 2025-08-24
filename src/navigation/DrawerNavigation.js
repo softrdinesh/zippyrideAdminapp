@@ -9,6 +9,7 @@ import Svg, { Path } from "react-native-svg";
 import ProfileScreen from "../Screens/Profile/profileScreen";
 import { colors } from "../uikit/UikitUtils/colors";
 import { useAuthStore } from "../zustand/useAuthStore";
+import { VehicleNavigator } from "./VehicleStack";
 
 const Drawer = createDrawerNavigator();
 
@@ -85,9 +86,9 @@ export const MainDrawer = () => {
       <Drawer.Screen
         name="VehicleSetup"
         options={{
-          headerTitle: "Vehicle Setup",
+          headerShown: false,
         }}
-        component={ProfileScreen}
+        component={VehicleNavigator}
       />
       <Drawer.Screen
         name="TripDetails"
