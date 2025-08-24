@@ -38,6 +38,26 @@ interface VehicleSetupPayload {
   IsDesielvech: boolean;
   FcexpiryDate: string;
 }
+interface Vehicle {
+  Chasisno: string;
+  Others: string;
+  EngineNo: string;
+  VehName: string;
+  VehcolorId: number;
+  IsHybrid: boolean;
+  CreateDate: string;
+  VehPicFile: any;
+  IsPetrolVech: boolean;
+  VehTypeId: number;
+  OwnerId: number;
+  IsCngenabled: boolean;
+  VehPic: string;
+  UpdateDate: string;
+  Vehno: string;
+  IsEv: boolean;
+  IsDesielvech: boolean;
+  FcexpiryDate: string;
+}
 
 export const useGetVehicleColors = () => {
   return useQuery<VehicleColor[]>({
@@ -56,5 +76,23 @@ export const useSetupVehicle = () => {
   return useMutation({
     mutationFn: (data: FormData) =>
       api.postFormData("api/Vehicles/SetupVehicle", data),
+  });
+};
+
+export const useGetVehiclesByOwnerId = (ownerId: number | undefined) => {
+  return useQuery<Vehicle[]>({
+    queryKey: ["vehicles", ownerId],
+    queryFn: () =>
+      api.get(`api/Vehicles/GetVehicleListByOwnerID?OwnerID=${ownerId}`),
+    enabled: !!ownerId,
+  });
+};
+
+export const useGetVehicleById = (vehicleId) => {
+  return useQuery({
+    queryKey: ["vehicle", vehicleId],
+    queryFn: () =>
+      api.get(`api/Vehicles/GetSpecificVehicleDetails/${vehicleId}`),
+    enabled: !!vehicleId, // The query will not run until vehicleId is available
   });
 };
