@@ -39,7 +39,21 @@ const NavigationRoot = () => {
         // Auth screens
         <Stack.Screen name="Auth" component={AuthNavigator} />
       ) : !isVehicleTag ? (
-        <Stack.Screen name="VehicleSetup" component={VehicleSetup} />
+        <Stack.Screen
+          name="VehicleSetup"
+          component={VehicleSetup}
+          options={{
+            headerShown: true,
+            headerTitleAlign: "center",
+            headerTitle: "Add Vehicle",
+            headerTitleStyle: {
+              fontSize: 20,
+              fontWeight: "600",
+              color: "#212529",
+              fontFamily: "System",
+            },
+          }}
+        />
       ) : (
         // Protected screens
         <>
