@@ -10,6 +10,9 @@ import ProfileScreen from "../Screens/Profile/profileScreen";
 import { colors } from "../uikit/UikitUtils/colors";
 import { useAuthStore } from "../zustand/useAuthStore";
 import { VehicleNavigator } from "./VehicleStack";
+import { TYPOGRAPHY } from "../theme/typography";
+import SvgCarIcon from "../icons/SvgCarIcon";
+import SvgDriver from "../icons/SvgDriver";
 
 const Drawer = createDrawerNavigator();
 
@@ -30,29 +33,30 @@ const CustomDrawerContent = (props) => {
   const { ownerProfile } = useAuthStore();
   const focusedRoute = routes[index].name;
 
-  // Helper function to create drawer items to avoid repetition
-  const renderDrawerItem = (routeName, label, iconName) => {
+  // Helper function to create drawer items
+  const renderDrawerItem = (routeName, label) => {
     const isFocused = focusedRoute === routeName;
-    const color = isFocused ? colors.brand.primary : colors.gray[500]; // Active vs. inactive color
-    const Icon = SampleSvgIcon; // Use the sample icon for now
+    const Icon = routeName === "TrackYourDriver" ? SvgDriver : SvgCarIcon; // Use the sample icon for now
+    const color = isFocused ? colors.brand.primary : colors.gray[600];
+
     return (
       <TouchableOpacity
         style={[styles.drawerItem, isFocused && styles.drawerItemFocused]}
         onPress={() => navigation.navigate(routeName)}
       >
-        {/* <View style={styles.drawerItemIcon}>
+        <View style={styles.drawerItemIcon}>
           <Icon color={color} size={24} />
-        </View> */}
+        </View>
         <Text style={[styles.drawerItemLabel, { color }]}>{label}</Text>
       </TouchableOpacity>
     );
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <DrawerContentScrollView {...props}>
         <View style={styles.drawerContent}>
-          {/* 2. User Details Section using standard components */}
+          {/* User Details Section */}
           <View style={styles.userInfoSection}>
             <Image
               source={{
@@ -64,10 +68,10 @@ const CustomDrawerContent = (props) => {
             <Text style={styles.caption}>john.doe@example.com</Text>
           </View>
 
-          {/* 3. Divider using a standard View */}
+          {/* Divider */}
           <View style={styles.divider} />
 
-          {/* 4. List of Options with the sample SVG icon */}
+          {/* List of Options */}
           {renderDrawerItem("VehicleSetup", "Vehicle Setup")}
           {renderDrawerItem("TripDetails", "Trip Details")}
           {renderDrawerItem("TrackYourDriver", "Track your driver")}
@@ -110,33 +114,35 @@ export const MainDrawer = () => {
 
 // Styles for the custom drawer component
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.base.white,
+  },
   drawerContent: {
     flex: 1,
   },
   userInfoSection: {
     paddingLeft: 20,
     paddingTop: 20,
+    paddingBottom: 10,
   },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.gray[200],
+    backgroundColor: colors.gray[100],
   },
   title: {
-    fontSize: 18,
+    ...TYPOGRAPHY.title,
     marginTop: 15,
-    fontWeight: "bold",
-    color: "#333",
   },
   caption: {
-    fontSize: 14,
-    lineHeight: 14,
-    color: "#666",
+    ...TYPOGRAPHY.body,
+    color: colors.gray[400],
   },
   divider: {
     height: 1,
-    backgroundColor: "#e0e0e0",
+    backgroundColor: colors.gray[100],
     marginVertical: 15,
     marginHorizontal: 20,
   },
@@ -149,13 +155,21 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   drawerItemFocused: {
-    backgroundColor: "rgba(244, 81, 30, 0.1)",
+    backgroundColor: colors.brand.primary + "1A", // Primary color with ~10% opacity
   },
   drawerItemIcon: {
-    marginRight: 20,
+    marginRight: 10,
   },
   drawerItemLabel: {
-    fontSize: 16,
-    fontWeight: "500",
+    ...TYPOGRAPHY.body,
+    fontWeight: "500", // Make labels slightly bolder
+  },
+  headerButton: {
+    marginLeft: 16,
+    padding: 4,
+  },
+  headerTitle: {
+    ...TYPOGRAPHY.header,
+    fontSize: 20, // Override for header
   },
 });
