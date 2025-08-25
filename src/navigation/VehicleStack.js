@@ -84,9 +84,9 @@ export const VehicleNavigator = () => {
       />
       <Stack.Screen
         name="VehicleSetupScreen"
-        options={{
-          title: "Add Vehicle",
-        }}
+        options={({ route }) => ({
+          title: route.params?.vehicleId ? "Edit Vehicle" : "Add Vehicle",
+        })}
         component={VehicleSetupScreen}
       />
     </Stack.Navigator>

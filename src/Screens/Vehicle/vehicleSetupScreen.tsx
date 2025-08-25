@@ -19,6 +19,8 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import {
+  useEditVehicle,
+  useGetVehicleById,
   useGetVehicleColors,
   useGetVehicleTypes,
   useSetupVehicle,
@@ -55,7 +57,9 @@ const validationSchema = Yup.object().shape({
   VehPicFile: Yup.string().required("Vehicle image is required"),
 });
 
-const VehicleSetupScreen = () => {
+const VehicleSetupScreen = ({ route }) => {
+  const { vehicleId } = route.params || {};
+  const isEdit = vehicleId !== undefined;
   const navigation = useNavigation();
   const modalRef = useRef(null);
 
@@ -67,11 +71,20 @@ const VehicleSetupScreen = () => {
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
 
   const { ownerProfile, setIsVehicleTag } = useAuthStore();
+  const { data, isLoading: isLoadingVehicleDetails } =
+    useGetVehicleById(vehicleId);
   const { data: colors, isLoading: isLoadingColors } = useGetVehicleColors();
   const { data: types, isLoading: isLoadingTypes } = useGetVehicleTypes();
-  const setupVehicleMutation = useSetupVehicle();
 
-  const isLoading = setupVehicleMutation.isPending || isLoadingColors;
+  const setupVehicleMutation = useSetupVehicle();
+  const editVehicleMutation = useEditVehicle();
+
+  const isLoading =
+    isLoadingVehicleDetails ||
+    setupVehicleMutation.isPending ||
+    editVehicleMutation.isPending ||
+    isLoadingTypes ||
+    isLoadingColors;
 
   const formik = useFormik({
     initialValues: {
@@ -115,11 +128,21 @@ const VehicleSetupScreen = () => {
 
         // Add required fields
         formData.append("OwnerId", ownerProfile.id);
-        formData.append("CreateDate", moment().format("YYYY-MM-DD"));
-        formData.append("UpdateDate", moment().format("YYYY-MM-DD"));
+
         console.log("Submitting Vehicle Setup Form:", formData);
 
-        const response = await setupVehicleMutation.mutateAsync(formData);
+        let response = null;
+
+        if (vehicleId) {
+          formData.append("VehicleID", vehicleId);
+          formData.append("isActive", true);
+          response = await editVehicleMutation.mutateAsync(formData);
+        } else {
+          formData.append("CreateDate", moment().format("YYYY-MM-DD"));
+          formData.append("UpdateDate", moment().format("YYYY-MM-DD"));
+          response = await setupVehicleMutation.mutateAsync(formData);
+        }
+
         console.log("Vehicle Setup Response:", response);
 
         if (response?.code === 5999) {
@@ -128,7 +151,10 @@ const VehicleSetupScreen = () => {
             text1: "Success",
             text2: response?.message || "Vehicle setup completed successfully",
           });
-
+          if (vehicleId) {
+            navigation.goBack();
+            return;
+          }
           Alert.alert(
             "Success",
             "Vehicle added successfully. Do you want to add another one?",
@@ -151,14 +177,17 @@ const VehicleSetupScreen = () => {
             type: "error",
             text1: "Error",
             text2:
-              response?.message || "Failed to add vehicle. Please try again.",
+              response?.message ||
+              `Failed to ${
+                vehicleId ? "edit" : "add"
+              } vehicle. Please try again.`,
           });
         }
       } catch (error) {
         Toast.show({
           type: "error",
           text1: "Error",
-          text2: getAxiosErrorMessage(error),
+          text2: error.message,
         });
       }
     },
@@ -175,6 +204,31 @@ const VehicleSetupScreen = () => {
     setDatePickerVisible(false);
   };
 
+  useEffect(() => {
+    if (data && vehicleId && colors && types) {
+      formik.setValues({
+        Vehno: data.vehno || "",
+        Chasisno: data.chasisno || "",
+        EngineNo: data.engineNo || "",
+        VehName: data.vehName || "",
+        VehcolorId:
+          colors?.find((c) => c.colname === data.colour)?.colourId || "",
+        VehTypeId:
+          types?.find((c) => c.vehTypeName === data.vehicleType)?.typeId || "",
+        IsHybrid: data.isHybrid || false,
+        IsPetrolVech: data.isPetrolVech || false,
+        IsCngenabled: data.isCngenabled || false,
+        IsDesielvech: data.isDesielvech || false,
+        IsEv: data.isEv || false,
+        Others: data.others || "",
+        FcexpiryDate: data.fcExpiryDate
+          ? moment(data.fcExpiryDate, "DD/MM/YYYY").toDate()
+          : new Date(),
+        VehPicFile: data.vehiclePicture || "",
+      });
+    }
+  }, [data, vehicleId, colors, types]);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -183,18 +237,6 @@ const VehicleSetupScreen = () => {
     >
       {isLoading && <Loader />}
 
-      <CommonModal
-        isOpen={showInfoModal.isOpen}
-        onClose={() =>
-          setShowInfoModal({
-            isOpen: false,
-            type: "success",
-            message: "",
-          })
-        }
-        type={showInfoModal.type}
-        message={showInfoModal.message}
-      />
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView
           contentContainerStyle={styles.contentContainer}
@@ -218,7 +260,9 @@ const VehicleSetupScreen = () => {
                 <SvgCameraIcon />
               </View>
             </TouchableOpacity>
-            <Text style={styles.addVehicleImage}>Add Vehicle Photo</Text>
+            <Text style={styles.addVehicleImage}>
+              {isEdit ? "Edit" : "Add"} Vehicle Photo
+            </Text>
             {formik.touched.VehPicFile && formik.errors.VehPicFile && (
               <Text style={styles.errorText}>{formik.errors.VehPicFile}</Text>
             )}
@@ -351,11 +395,7 @@ const VehicleSetupScreen = () => {
                 ]}
               >
                 {formik.values.FcexpiryDate
-                  ? formik.values.FcexpiryDate.toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })
+                  ? moment(formik.values.FcexpiryDate).format("DD-MM-YYYY")
                   : "Select FC expiry date"}
               </Text>
             </TouchableOpacity>
@@ -444,7 +484,7 @@ const VehicleSetupScreen = () => {
             >
               <Text style={styles.buttonText}>
                 {isLoading
-                  ? "Adding Vehicle Details..."
+                  ? `${isEdit ? "Editing" : "Adding"} Vehicle Details...`
                   : "Submit Vehicle Details"}
               </Text>
             </TouchableOpacity>
@@ -473,6 +513,18 @@ const VehicleSetupScreen = () => {
             <Text style={styles.datePickerTitle}>Select FC Expiry Date</Text>
           </View>
         )}
+      />
+      <CommonModal
+        isOpen={showInfoModal.isOpen}
+        onClose={() =>
+          setShowInfoModal({
+            isOpen: false,
+            type: "success",
+            message: "",
+          })
+        }
+        type={showInfoModal.type}
+        message={showInfoModal.message}
       />
     </KeyboardAvoidingView>
   );

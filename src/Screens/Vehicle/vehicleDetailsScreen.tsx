@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -12,6 +12,7 @@ import {
 import { useGetVehicleById } from "../../services/api";
 import { colors } from "../../uikit/UikitUtils/colors";
 import SvgCarIcon from "../../icons/SvgCarIcon";
+import { useFocusEffect } from "@react-navigation/native";
 
 // A reusable component to display each detail item
 const DetailRow = ({ label, value, isBoolean = false }) => {
@@ -34,6 +35,12 @@ const VehicleDetailScreen = ({ route }) => {
 
   // The actual vehicle data is likely nested in the response
   const vehicle = data;
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [])
+  );
 
   if (isLoading) {
     return (
@@ -85,10 +92,21 @@ const VehicleDetailScreen = ({ route }) => {
           <DetailRow label="Chassis No." value={vehicle.chasisno} />
           <DetailRow label="Engine No." value={vehicle.engineNo} />
           <DetailRow label="Color" value={vehicle.colour} />
+          <DetailRow label="Type" value={vehicle.vehicleType} />
+        </View>
+        {/* Status & Info Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Status & Info</Text>
+          <DetailRow label="Active" value={vehicle.isActive} isBoolean />
+          <DetailRow label="Hybrid" value={vehicle.isHybrid} isBoolean />
+          <DetailRow label="Petrol" value={vehicle.isPetrolVech} isBoolean />
           <DetailRow
-            label="Type"
-            value={`${vehicle.vehicleType} (${vehicle.vehicleTypeInfo})`}
+            label="CNG Enabled"
+            value={vehicle.isCngenabled}
+            isBoolean
           />
+          <DetailRow label="Electric (EV)" value={vehicle.isEv} isBoolean />
+          <DetailRow label="Other Notes" value={vehicle.others} />
         </View>
 
         {/* Compliance Card */}

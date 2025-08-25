@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -11,7 +11,8 @@ import {
 import { useGetVehiclesByOwnerId } from "../../services/api";
 import { useAuthStore } from "../../zustand/useAuthStore";
 import SvgCarIcon from "../../icons/SvgCarIcon";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import Loader from "../../uikit/Loader/Loader";
 
 // Reusable component for each vehicle card in the list
 const VehicleCard = ({ vehicle, onPress }) => {
@@ -46,8 +47,17 @@ const VehicleListScreen = () => {
   const { ownerProfile } = useAuthStore();
   const navigation = useNavigation();
 
-  const { data: vehicles, isLoading: isLoadingVehicles } =
-    useGetVehiclesByOwnerId(ownerProfile?.id);
+  const {
+    data: vehicles,
+    refetch,
+    isFetching: isLoadingVehicles,
+  } = useGetVehiclesByOwnerId(ownerProfile?.id);
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [])
+  );
 
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
@@ -61,6 +71,7 @@ const VehicleListScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       {/* Vehicle List */}
+      {isLoadingVehicles && <Loader />}
       <FlatList
         data={vehicles}
         keyExtractor={(item) => item.vehID}

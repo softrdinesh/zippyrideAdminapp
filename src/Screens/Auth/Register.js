@@ -35,7 +35,7 @@ import SvgEyeOutline from "../../icons/SvgEyleOutLine";
 import SvgEye from "../../icons/SvgEye";
 import Registererrormodal from "./registererror";
 import RegisterSuccessModal from "./registersuccess";
-import { getAxiosErrorMessage } from "../../uikit/UikitUtils/helpers";
+
 import SvgCameraIcon from "../../icons/SvgCameraIcon";
 
 const { width, height } = Dimensions.get("window");
@@ -171,9 +171,9 @@ const Register = () => {
           setfailermessage(response?.message || "Signup failed");
         }
       } catch (error) {
-        console.error("Signup failed:", error);
+        console.log("Signup failed:", error);
         setisfailer(true);
-        setfailermessage(getAxiosErrorMessage(error));
+        setfailermessage(error?.message);
       } finally {
         setloading(false);
       }

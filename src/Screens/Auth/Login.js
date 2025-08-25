@@ -432,13 +432,6 @@ const SignInScreen = () => {
                 </TouchableOpacity>
               )}
             />
-
-            <TouchableOpacity
-              onPress={() => navigation.navigate("Forgotpassword")}
-              style={styles.forgotStyle}
-            >
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
           </View>
           <Button
             onClick={() => {

@@ -79,6 +79,13 @@ export const useSetupVehicle = () => {
   });
 };
 
+export const useEditVehicle = () => {
+  return useMutation({
+    mutationFn: (data: FormData) =>
+      api.postFormData("api/Vehicles/UpdateVehicle", data),
+  });
+};
+
 export const useGetVehiclesByOwnerId = (ownerId: number | undefined) => {
   return useQuery<Vehicle[]>({
     queryKey: ["vehicles", ownerId],
