@@ -10,14 +10,15 @@ import {
   TouchableWithoutFeedback,
   Alert,
   Keyboard,
+  StyleSheet,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { Dropdown } from "react-native-element-dropdown";
-import { StyleSheet } from "react-native";
-import { useNavigation } from "@react-navigation/native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import moment from "moment";
+
 import {
   useEditVehicle,
   useGetVehicleById,
@@ -25,17 +26,18 @@ import {
   useGetVehicleTypes,
   useSetupVehicle,
 } from "../../services/api";
-
 import Loader from "../../uikit/Loader/Loader";
-import { getAxiosErrorMessage } from "../../uikit/UikitUtils/helpers";
 import CommonModal from "../../uikit/CommonModal";
 import SvgCameraIcon from "../../icons/SvgCameraIcon";
 import ImageUploadModal from "../../uikit/ImageUploadModal/Index";
 import CheckBox from "../../uikit/CheckBox/CheckBox";
 import { useAuthStore } from "../../zustand/useAuthStore";
 import InputText from "../../uikit/InputText/InputText";
-import moment from "moment";
+import { colors } from "../../uikit/UikitUtils/colors"; // Import your colors
+import { TYPOGRAPHY } from "../../theme/typography"; // Import your typography
+import { useNavigation } from "@react-navigation/native";
 
+// ... (validationSchema remains the same)
 const validationSchema = Yup.object().shape({
   Vehno: Yup.string()
     .matches(
@@ -58,6 +60,7 @@ const validationSchema = Yup.object().shape({
 });
 
 const VehicleSetupScreen = ({ route }) => {
+  // ... (all your hooks and logic remain the same)
   const { vehicleId } = route.params || {};
   const isEdit = vehicleId !== undefined;
   const navigation = useNavigation();
@@ -73,7 +76,8 @@ const VehicleSetupScreen = ({ route }) => {
   const { ownerProfile, setIsVehicleTag } = useAuthStore();
   const { data, isLoading: isLoadingVehicleDetails } =
     useGetVehicleById(vehicleId);
-  const { data: colors, isLoading: isLoadingColors } = useGetVehicleColors();
+  const { data: colorsData, isLoading: isLoadingColors } =
+    useGetVehicleColors();
   const { data: types, isLoading: isLoadingTypes } = useGetVehicleTypes();
 
   const setupVehicleMutation = useSetupVehicle();
@@ -205,14 +209,14 @@ const VehicleSetupScreen = ({ route }) => {
   };
 
   useEffect(() => {
-    if (data && vehicleId && colors && types) {
+    if (data && vehicleId && colorsData && types) {
       formik.setValues({
         Vehno: data.vehno || "",
         Chasisno: data.chasisno || "",
         EngineNo: data.engineNo || "",
         VehName: data.vehName || "",
         VehcolorId:
-          colors?.find((c) => c.colname === data.colour)?.colourId || "",
+          colorsData?.find((c) => c.colname === data.colour)?.colourId || "",
         VehTypeId:
           types?.find((c) => c.vehTypeName === data.vehicleType)?.typeId || "",
         IsHybrid: data.isHybrid || false,
@@ -227,12 +231,12 @@ const VehicleSetupScreen = ({ route }) => {
         VehPicFile: data.vehiclePicture || "",
       });
     }
-  }, [data, vehicleId, colors, types]);
+  }, [data, vehicleId, colorsData, types]);
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
+      style={styles.container}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
       {isLoading && <Loader />}
@@ -242,6 +246,7 @@ const VehicleSetupScreen = ({ route }) => {
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
+          {/* ... (JSX remains the same, but styles will be updated) ... */}
           <View style={styles.profileSection}>
             <TouchableOpacity
               style={styles.vehicleImageContainer}
@@ -335,7 +340,7 @@ const VehicleSetupScreen = ({ route }) => {
               selectedTextStyle={styles.selectedTextStyle}
               inputSearchStyle={styles.inputSearchStyle}
               iconStyle={styles.iconStyle}
-              data={colors || []}
+              data={colorsData || []}
               search
               maxHeight={300}
               labelField="colname"
@@ -507,7 +512,7 @@ const VehicleSetupScreen = ({ route }) => {
         onCancel={() => setDatePickerVisible(false)}
         minimumDate={new Date()}
         date={formik.values.FcexpiryDate || new Date()}
-        buttonTextColorIOS="#4267B2"
+        buttonTextColorIOS={colors.brand.primary}
         customHeaderIOS={() => (
           <View style={styles.datePickerHeader}>
             <Text style={styles.datePickerTitle}>Select FC Expiry Date</Text>
@@ -530,37 +535,14 @@ const VehicleSetupScreen = ({ route }) => {
   );
 };
 
+// Styles updated to use TYPOGRAPHY and colors
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.base.white,
   },
   contentContainer: {
     paddingBottom: 40,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 16,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E9ECEF",
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: "#F1F3F5",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#212529",
-    textAlign: "center",
-    flex: 1,
-    fontFamily: "System",
   },
   profileSection: {
     alignItems: "center",
@@ -571,12 +553,12 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#E9ECEF",
+    backgroundColor: colors.gray[100],
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#FFFFFF",
-    shadowColor: "#000",
+    borderColor: colors.base.white,
+    shadowColor: colors.base.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -592,61 +574,43 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: "#F6A000",
+    backgroundColor: colors.brand.primary,
     width: 36,
     height: 36,
     borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#FFFFFF",
+    borderColor: colors.base.white,
   },
   addVehicleImage: {
-    fontSize: 14,
-    color: "#495057",
+    ...TYPOGRAPHY.body,
+    color: colors.gray[600],
     marginTop: 12,
-    fontWeight: "500",
-    fontFamily: "System",
   },
   formContainer: {
     paddingHorizontal: 24,
     marginTop: 8,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#343A40",
+    ...TYPOGRAPHY.label,
     marginBottom: 8,
-    marginTop: 12,
-    fontFamily: "System",
+    marginTop: 16,
   },
   input: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.base.white,
     borderWidth: 1,
-    borderColor: "#DEE2E6",
+    borderColor: colors.border.default,
     borderRadius: 8,
-    shadowColor: "#000",
+    shadowColor: colors.base.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
-
   vehicleCheckboxes: {
     paddingVertical: 12,
-    gap: 5,
-  },
-  phoneInput: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#DEE2E6",
-    borderRadius: 8,
-    height: 50,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    gap: 8,
   },
   addressInput: {
     height: 100,
@@ -654,118 +618,80 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     height: 50,
-    borderColor: "#DEE2E6",
+    borderColor: colors.border.default,
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 16,
-    backgroundColor: "#FFFFFF",
-    marginBottom: 8,
-    shadowColor: "#000",
+    backgroundColor: colors.base.white,
+    shadowColor: colors.base.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
   },
   placeholderStyle: {
-    fontSize: 14,
-    color: "#ADB5BD",
-    fontFamily: "System",
+    ...TYPOGRAPHY.body,
+    color: colors.gray[300],
   },
   selectedTextStyle: {
-    fontSize: 14,
-    color: "#212529",
-    fontFamily: "System",
+    ...TYPOGRAPHY.body,
+    color: colors.text.primary,
   },
   inputSearchStyle: {
+    ...TYPOGRAPHY.body,
     height: 40,
-    fontSize: 14,
-    color: "#212529",
-    backgroundColor: "#FFFFFF",
-    fontFamily: "System",
+    backgroundColor: colors.base.white,
   },
   dropdownItemText: {
-    fontSize: 14,
-    color: "#212529",
-    fontFamily: "System",
+    ...TYPOGRAPHY.body,
   },
   iconStyle: {
     width: 24,
     height: 24,
   },
   errorBorder: {
-    borderColor: "#FA5252",
+    borderColor: colors.status.error,
   },
   errorText: {
-    color: "#FA5252",
-    fontSize: 12,
-    marginBottom: 8,
-    fontFamily: "System",
-  },
-  termsText: {
-    fontSize: 12,
-    color: "#868E96",
-    textAlign: "center",
-    marginVertical: 16,
-    lineHeight: 18,
-    fontFamily: "System",
-  },
-  link: {
-    color: "#4267B2",
-    fontWeight: "600",
+    ...TYPOGRAPHY.caption,
+    color: colors.status.error,
+    marginTop: 4,
   },
   button: {
-    backgroundColor: "#4267B2",
-    paddingVertical: 16,
+    backgroundColor: colors.brand.primary,
+    paddingVertical: 10,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 16,
-    shadowColor: "#4267B2",
+    shadowColor: colors.brand.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
-  buttonDisabled: {
-    backgroundColor: "#ADB5BD",
-    opacity: 0.7,
-  },
   buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
-    fontFamily: "System",
+    ...TYPOGRAPHY.button,
   },
   datePickerHeader: {
     width: "100%",
     padding: 16,
     alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: "#E9ECEF",
-    backgroundColor: "#FFFFFF",
+    borderBottomColor: colors.border.default,
+    backgroundColor: colors.base.white,
   },
   datePickerTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#212529",
-    fontFamily: "System",
+    ...TYPOGRAPHY.title,
   },
   dateInput: {
     justifyContent: "center",
     paddingHorizontal: 16,
     height: 50,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "#DEE2E6",
-    borderRadius: 8,
   },
   dateText: {
-    fontSize: 14,
-    color: "#212529",
-    fontFamily: "System",
-  },
-  placeholderStyle: {
-    color: "#ADB5BD",
+    ...TYPOGRAPHY.body,
+    color: colors.text.primary,
   },
 });
 
