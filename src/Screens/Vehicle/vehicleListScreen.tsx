@@ -13,7 +13,8 @@ import { useAuthStore } from "../../zustand/useAuthStore";
 import SvgCarIcon from "../../icons/SvgCarIcon";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Loader from "../../uikit/Loader/Loader";
-
+import { colors } from "../../uikit/UikitUtils/colors";
+import { TYPOGRAPHY } from "../../theme/typography";
 // Reusable component for each vehicle card in the list
 const VehicleCard = ({ vehicle, onPress }) => {
   return (
@@ -27,7 +28,7 @@ const VehicleCard = ({ vehicle, onPress }) => {
               resizeMode="cover"
             />
           ) : (
-            <SvgCarIcon size={50} color="#4267B2" />
+            <SvgCarIcon size={50} color={colors.brand.primary} />
           )}
         </View>
         <View style={styles.cardDetails}>
@@ -97,34 +98,36 @@ const VehicleListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA", // A slightly off-white for better contrast
+    backgroundColor: colors.gray[100],
   },
   listContainer: {
     paddingVertical: 16,
     paddingHorizontal: 24,
+    flexGrow: 1,
   },
   itemCard: {
-    borderRadius: 8,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    borderRadius: 12,
+    backgroundColor: colors.base.white,
+    shadowColor: colors.base.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
     elevation: 3,
   },
   listDivider: {
-    height: 16, // Creates space between cards
+    height: 16,
   },
   cardContent: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
   cardImageContainer: {
     width: 80,
     height: 80,
     borderRadius: 8,
-    backgroundColor: "#E9ECEF",
+    backgroundColor: colors.gray[100],
     justifyContent: "center",
     alignItems: "center",
   },
@@ -138,50 +141,42 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardVehName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#212529",
-    fontFamily: "System",
+    ...TYPOGRAPHY.title,
+    color: colors.text.primary,
   },
   cardVehNo: {
-    fontSize: 14,
-    color: "#868E96",
-    marginTop: 4,
-    fontFamily: "System",
+    ...TYPOGRAPHY.body,
+    color: colors.gray[400],
+    // marginTop: 4,
   },
   chip: {
-    backgroundColor: "#F1F3F5",
+    backgroundColor: colors.brand.primary + "20",
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 4,
-    marginTop: 8,
-    alignSelf: "flex-start", // Ensures chip is only as wide as its content
+    marginTop: 4,
+    alignSelf: "flex-start",
   },
   chipText: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "#495057",
-    fontFamily: "System",
+    ...TYPOGRAPHY.caption,
+    color: colors.brand.primary,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: "40%", // Push content down a bit
   },
   emptyText: {
+    ...TYPOGRAPHY.header,
     fontSize: 18,
-    fontWeight: "600",
-    color: "#495057",
-    fontFamily: "System",
+    color: colors.gray[600],
+    textAlign: "center",
   },
   emptySubText: {
-    fontSize: 14,
-    color: "#ADB5BD",
+    ...TYPOGRAPHY.body,
     marginTop: 8,
     textAlign: "center",
     paddingHorizontal: 40,
-    fontFamily: "System",
   },
 });
 

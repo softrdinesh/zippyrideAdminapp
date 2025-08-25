@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -13,33 +13,40 @@ import { useGetVehicleById } from "../../services/api";
 import { colors } from "../../uikit/UikitUtils/colors";
 import SvgCarIcon from "../../icons/SvgCarIcon";
 import { useFocusEffect } from "@react-navigation/native";
+import { TYPOGRAPHY } from "../../theme/typography"; // Import your typography styles
 
-// A reusable component to display each detail item
-const DetailRow = ({ label, value, isBoolean = false }) => {
-  const displayValue = isBoolean ? (value ? "Yes" : "No") : value || "N/A";
+// A reusable component for key-value pairs
+const DetailRow = ({ label, value }) => (
+  <View style={styles.detailRow}>
+    <Text style={styles.detailLabel}>{label}</Text>
+    <Text style={styles.detailValue}>{value || "N/A"}</Text>
+  </View>
+);
+
+// A new component for displaying boolean features in a grid
+const FeatureBox = ({ label, value }) => {
+  if (!value) return null; // Don't render if the feature is false
   return (
-    <View style={styles.detailRow}>
-      <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue}>{displayValue}</Text>
+    <View style={styles.featureBox}>
+      <Text style={styles.featureText}>{label}</Text>
     </View>
   );
 };
 
-// Main component for the Vehicle Detail Screen
 const VehicleDetailScreen = ({ route }) => {
   const { vehicleId } = route.params;
-
-  // 3. Fetch data using the hook
-  const { data, isLoading, isError, error, refetch } =
-    useGetVehicleById(vehicleId);
-
-  // The actual vehicle data is likely nested in the response
-  const vehicle = data;
+  const {
+    data: vehicle,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useGetVehicleById(vehicleId);
 
   useFocusEffect(
     useCallback(() => {
       refetch();
-    }, [])
+    }, [refetch]) // Added refetch to dependency array
   );
 
   if (isLoading) {
@@ -51,12 +58,12 @@ const VehicleDetailScreen = ({ route }) => {
     );
   }
 
-  if (isError) {
+  if (isError || !vehicle) {
     return (
       <View style={styles.loaderContainer}>
         <Text style={styles.errorText}>Failed to load details.</Text>
         <Text style={styles.errorSubText}>
-          {error?.message || "Unknown Error"}
+          {error?.message || "An unknown error occurred."}
         </Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
           <Text style={styles.retryButtonText}>Try Again</Text>
@@ -68,18 +75,16 @@ const VehicleDetailScreen = ({ route }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.contentContainer}>
-        {/* Vehicle Image and Primary Info */}
+        {/* Main Info Section */}
         <View style={styles.profileSection}>
           <View style={styles.vehicleImageContainer}>
             {vehicle.vehiclePicture ? (
               <Image
-                source={{
-                  uri: vehicle.vehiclePicture,
-                }}
+                source={{ uri: vehicle.vehiclePicture }}
                 style={styles.vehicleImage}
               />
             ) : (
-              <SvgCarIcon size={50} color="#4267B2" />
+              <SvgCarIcon size={60} color={colors.brand.primary} />
             )}
           </View>
           <Text style={styles.vehicleName}>{vehicle.vehName}</Text>
@@ -94,19 +99,18 @@ const VehicleDetailScreen = ({ route }) => {
           <DetailRow label="Color" value={vehicle.colour} />
           <DetailRow label="Type" value={vehicle.vehicleType} />
         </View>
-        {/* Status & Info Card */}
+
+        {/* Features Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Status & Info</Text>
-          <DetailRow label="Active" value={vehicle.isActive} isBoolean />
-          <DetailRow label="Hybrid" value={vehicle.isHybrid} isBoolean />
-          <DetailRow label="Petrol" value={vehicle.isPetrolVech} isBoolean />
-          <DetailRow
-            label="CNG Enabled"
-            value={vehicle.isCngenabled}
-            isBoolean
-          />
-          <DetailRow label="Electric (EV)" value={vehicle.isEv} isBoolean />
-          <DetailRow label="Other Notes" value={vehicle.others} />
+          <Text style={styles.cardTitle}>Features</Text>
+          <View style={styles.featuresGrid}>
+            <FeatureBox label="Electric (EV)" value={vehicle.isEv} />
+            <FeatureBox label="Hybrid" value={vehicle.isHybrid} />
+            <FeatureBox label="Petrol" value={vehicle.isPetrolVech} />
+            <FeatureBox label="Diesel" value={vehicle.isDesielvech} />
+            <FeatureBox label="CNG Enabled" value={vehicle.isCngenabled} />
+            <FeatureBox label="Active" value={vehicle.isActive} />
+          </View>
         </View>
 
         {/* Compliance Card */}
@@ -122,59 +126,32 @@ const VehicleDetailScreen = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA", // A light grey background
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E9ECEF",
-  },
-  backButton: {
-    padding: 8,
-  },
-  backButtonText: {
-    fontSize: 24,
-    color: "#212529",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#212529",
-    fontFamily: "System",
-  },
-  headerActionPlaceholder: {
-    width: 40,
+    backgroundColor: colors.gray[100],
   },
   contentContainer: {
-    paddingBottom: 120, // Space for the footer buttons
+    paddingBottom: 40,
   },
   profileSection: {
     alignItems: "center",
     paddingVertical: 24,
-    paddingHorizontal: 24,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: colors.base.white,
     borderBottomWidth: 1,
-    borderBottomColor: "#E9ECEF",
+    borderBottomColor: colors.border.default,
   },
   vehicleImageContainer: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#E9ECEF",
+    backgroundColor: colors.gray[100],
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 3,
-    borderColor: "#FFFFFF",
-    shadowColor: "#000",
+    borderColor: colors.base.white,
+    shadowColor: colors.base.black,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 5,
   },
   vehicleImage: {
     width: "100%",
@@ -182,78 +159,91 @@ const styles = StyleSheet.create({
     borderRadius: 60,
   },
   vehicleName: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#212529",
+    ...TYPOGRAPHY.header,
     marginTop: 16,
   },
   vehicleNumber: {
-    fontSize: 16,
-    color: "#868E96",
+    ...TYPOGRAPHY.body,
+    color: colors.gray[400],
     marginTop: 4,
   },
   card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
+    backgroundColor: colors.base.white,
+    borderRadius: 12,
     padding: 20,
     marginHorizontal: 24,
     marginTop: 16,
-    shadowColor: "#000",
+    shadowColor: colors.base.black,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     elevation: 3,
   },
   cardTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#343A40",
-    marginBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E9ECEF",
+    ...TYPOGRAPHY.title,
+    marginBottom: 12,
     paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray[100],
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
   detailLabel: {
-    fontSize: 14,
-    color: "#868E96",
+    ...TYPOGRAPHY.label,
   },
   detailValue: {
-    fontSize: 14,
+    ...TYPOGRAPHY.body,
+    color: colors.text.primary,
     fontWeight: "500",
-    color: "#212529",
+  },
+  featuresGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    paddingTop: 8,
+  },
+  featureBox: {
+    backgroundColor: colors.brand.primary + "20", // Primary color with opacity
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  featureText: {
+    ...TYPOGRAPHY.caption,
+    color: colors.brand.primary,
   },
   loaderContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F8F9FA",
+    backgroundColor: colors.gray[100],
   },
   loaderText: {
+    ...TYPOGRAPHY.body,
     marginTop: 16,
-    fontSize: 16,
-    color: "#495057",
   },
   errorText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FA5252",
+    ...TYPOGRAPHY.header,
+    color: colors.status.error,
+  },
+  errorSubText: {
+    ...TYPOGRAPHY.body,
+    marginTop: 8,
   },
   retryButton: {
     marginTop: 20,
-    backgroundColor: "#4267B2",
+    backgroundColor: colors.brand.primary,
     paddingVertical: 12,
     paddingHorizontal: 30,
     borderRadius: 8,
   },
   retryButtonText: {
-    color: "#FFFFFF",
+    ...TYPOGRAPHY.title,
     fontSize: 16,
-    fontWeight: "600",
+    color: colors.base.white,
   },
 });
 
