@@ -412,7 +412,7 @@ const SignInScreen = () => {
             value={formik.values.username}
             onChange={formik.handleChange("username")}
           />
-          <View style={{ marginTop: height * 0.01 }}>
+          <View style={{ marginTop: height * 0.01, marginBottom: 20 }}>
             <Text style={styles.label}>Password</Text>
             <InputText
               maxLength={30}
@@ -484,16 +484,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#333",
     marginBottom: 10,
-  },
-  forgotStyle: {
-    alignSelf: "flex-end",
-    marginTop: 5,
-    marginBottom: 20,
-  },
-  forgotText: {
-    fontSize: 15,
-    color: "#4A90E2",
-    fontWeight: "500",
   },
   button: {
     backgroundColor: "#E5D463",
