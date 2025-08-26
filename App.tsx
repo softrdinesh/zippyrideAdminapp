@@ -1,22 +1,20 @@
 import React, { useRef } from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createStackNavigator } from "@react-navigation/stack";
 import { enableScreens } from "react-native-screens";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthNavigator } from "./src/navigation/AuthNavigator";
-import BottomTabs from "./src/navigation/Bottomtabs";
-
-import Navbar from "./src/Screens/Navbar/Navbar";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuthStore } from "./src/zustand/useAuthStore";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import VehicleSetup from "./src/Screens/Vehicle/vehicleSetupScreen";
 import Toast from "react-native-toast-message";
+import { MainDrawer } from "./src/navigation/DrawerNavigation";
 
 enableScreens();
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,16 +39,25 @@ const NavigationRoot = () => {
         // Auth screens
         <Stack.Screen name="Auth" component={AuthNavigator} />
       ) : !isVehicleTag ? (
-        <Stack.Screen name="VehicleSetup" component={VehicleSetup} />
+        <Stack.Screen
+          name="VehicleSetup"
+          component={VehicleSetup}
+          options={{
+            headerShown: true,
+            headerTitleAlign: "center",
+            headerTitle: "Add Vehicle",
+            headerTitleStyle: {
+              fontSize: 20,
+              fontWeight: "600",
+              color: "#212529",
+              fontFamily: "System",
+            },
+          }}
+        />
       ) : (
         // Protected screens
         <>
-          <Stack.Screen
-            name="Main"
-            component={BottomTabs}
-            options={{ gestureEnabled: false }}
-          />
-          <Stack.Screen name="Navbar" component={Navbar} />
+          <Stack.Screen name="Main" component={MainDrawer} />
         </>
       )}
     </Stack.Navigator>

@@ -60,7 +60,7 @@ export const api = {
       const response = await apiClient.get<T>(url);
       return response.data;
     } catch (error) {
-      throw handleApiError(error as AxiosError);
+      throw error;
     }
   },
 
@@ -69,7 +69,7 @@ export const api = {
       const response = await apiClient.post<T>(url, data);
       return response.data;
     } catch (error) {
-      throw handleApiError(error as AxiosError);
+      throw error;
     }
   },
 
@@ -78,7 +78,7 @@ export const api = {
       const response = await apiClient.put<T>(url, data);
       return response.data;
     } catch (error) {
-      throw handleApiError(error as AxiosError);
+      throw error;
     }
   },
 
@@ -87,7 +87,7 @@ export const api = {
       const response = await apiClient.delete<T>(url);
       return response.data;
     } catch (error) {
-      throw handleApiError(error as AxiosError);
+      throw error;
     }
   },
   async postFormData<T>(url: string, data: FormData): Promise<T> {
@@ -99,7 +99,7 @@ export const api = {
       });
       return response.data;
     } catch (error) {
-      throw handleApiError(error as AxiosError);
+      throw error;
     }
   },
   async putFormData<T>(url: string, data: FormData): Promise<T> {
@@ -111,7 +111,7 @@ export const api = {
       });
       return response.data;
     } catch (error) {
-      throw handleApiError(error as AxiosError);
+      throw error;
     }
   },
 };

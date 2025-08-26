@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { getItem, setItem, removeItem } from "../utils/mmkvStorage";
 
 interface OwnerProfile {
-  id: string;
+  id: number;
   username: string;
   token: string;
   isVehicleTag: boolean;
