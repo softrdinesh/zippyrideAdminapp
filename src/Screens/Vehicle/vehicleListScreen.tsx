@@ -64,7 +64,7 @@ const VehicleListScreen = () => {
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyText}>No vehicles added yet.</Text>
       <Text style={styles.emptySubText}>
-        Tap the '+' button to add your first vehicle.
+        Tap the 'Add' button to add your first vehicle.
       </Text>
     </View>
   );

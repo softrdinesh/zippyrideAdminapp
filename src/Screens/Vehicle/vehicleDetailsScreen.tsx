@@ -118,6 +118,12 @@ const VehicleDetailScreen = ({ route }) => {
           <Text style={styles.cardTitle}>Compliance</Text>
           <DetailRow label="FC Expiry Date" value={vehicle.fcExpiryDate} />
         </View>
+
+        {/* Other details */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Other Details</Text>
+          <Text style={styles.notesText}>{vehicle.others}</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -214,6 +220,20 @@ const styles = StyleSheet.create({
   featureText: {
     ...TYPOGRAPHY.caption,
     color: colors.brand.primary,
+  },
+  notesSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray[100],
+  },
+  notesLabel: {
+    ...TYPOGRAPHY.label,
+    marginBottom: 8,
+  },
+  notesText: {
+    ...TYPOGRAPHY.body,
+    lineHeight: 22,
   },
   loaderContainer: {
     flex: 1,
