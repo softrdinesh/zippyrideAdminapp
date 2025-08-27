@@ -4,6 +4,7 @@ import { createDrawerNavigator } from "@react-navigation/drawer";
 import ProfileScreen from "../Screens/Profile/profileScreen";
 import { VehicleNavigator } from "./VehicleStack";
 import { CustomDrawerContent } from "../uikit/CustomDrawerContent";
+import { TripsNavigator } from "./TripsStack";
 
 const Drawer = createDrawerNavigator();
 
@@ -21,9 +22,9 @@ export const MainDrawer = () => {
       />
       <Drawer.Screen
         name="TripDetails"
-        component={ProfileScreen}
+        component={TripsNavigator}
         options={{
-          headerTitle: "Trip Details",
+          headerShown: false,
         }}
       />
       <Drawer.Screen
