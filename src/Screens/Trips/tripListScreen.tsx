@@ -11,16 +11,15 @@ import {
   ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import Svg, { Path } from "react-native-svg";
+import { debounce } from "lodash";
+
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
-import Svg, { Path } from "react-native-svg";
 import { useAuthStore } from "../../zustand/useAuthStore";
 import { useGetTripsByOwner, TripListItem } from "../../services/api/trips";
-import { debounce } from "lodash";
 import SvgClose from "../../icons/SvgClose";
-// import { useGetTripsByOwner, TripListItem } from "../../services/api"; // 1. Import the correct hook and type
 
-// --- (SVG Icons remain the same) ---
 const FilterIcon = () => (
   <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
     <Path
@@ -38,7 +37,6 @@ const SearchIcon = () => (
   </Svg>
 );
 
-// --- 2. TripCard updated to use the new payload fields ---
 interface TripCardProps {
   item: TripListItem;
   onPress: () => void;
@@ -208,10 +206,11 @@ const TripListScreen: React.FC = () => {
       ) : (
         <FlatList
           data={trips || []}
-          keyExtractor={(item) => item.tripNo} // Use a unique key like tripNo
-          renderItem={({ item }) => (
+          keyExtractor={(item) => item.tripNo}
+          renderItem={({ item, index }) => (
             <TripCard
               item={item}
+              index={index}
               onPress={() =>
                 navigation.navigate("TripDetailsScreen", {
                   tripId: item.tripNo,
