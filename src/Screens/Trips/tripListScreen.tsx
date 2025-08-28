@@ -11,6 +11,7 @@ import {
   ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import Animated, { FadeInUp } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { debounce } from "lodash";
 
@@ -40,9 +41,13 @@ const SearchIcon = () => (
 interface TripCardProps {
   item: TripListItem;
   onPress: () => void;
+  index: number;
 }
 
-const TripCard: React.FC<TripCardProps> = ({ item, onPress }) => {
+const AnimatedTouchableOpacity =
+  Animated.createAnimatedComponent(TouchableOpacity);
+
+const TripCard: React.FC<TripCardProps> = ({ item, onPress, index }) => {
   const statusStyle =
     item.status === "Completed"
       ? styles.statusCompleted
@@ -51,7 +56,11 @@ const TripCard: React.FC<TripCardProps> = ({ item, onPress }) => {
       : styles.statusInProgress;
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
+    <AnimatedTouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+      entering={FadeInUp.delay(index * 100)}
+    >
       <View style={styles.cardHeader}>
         <Text style={styles.driverName}>{item.ridername}</Text>
         {item.status && (
@@ -80,7 +89,7 @@ const TripCard: React.FC<TripCardProps> = ({ item, onPress }) => {
         </View>
       </View>
       {item.tripdate && <Text style={styles.dateText}>{item.tripdate}</Text>}
-    </TouchableOpacity>
+    </AnimatedTouchableOpacity>
   );
 };
 
