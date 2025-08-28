@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -7,54 +7,20 @@ import {
   TouchableOpacity,
   SafeAreaView,
   TextInput,
+  ActivityIndicator,
   ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
 import Svg, { Path } from "react-native-svg";
+import { useAuthStore } from "../../zustand/useAuthStore";
+import { useGetTripsByOwner, TripListItem } from "../../services/api/trips";
+import { debounce } from "lodash";
+import SvgClose from "../../icons/SvgClose";
+// import { useGetTripsByOwner, TripListItem } from "../../services/api"; // 1. Import the correct hook and type
 
-// --- Dummy Data (to be replaced by API data) ---
-const dummyTrips = [
-  {
-    id: "1",
-    driverName: "John Doe",
-    vehicleNo: "MH12AB1234",
-    startLocation: "Main St, Downtown",
-    endLocation: "Oak Ave, Suburbs",
-    date: "2025-08-26",
-    status: "Completed",
-  },
-  {
-    id: "2",
-    driverName: "Jane Smith",
-    vehicleNo: "DL8CM6789",
-    startLocation: "Central Park",
-    endLocation: "Westside Highway",
-    date: "2025-08-26",
-    status: "In Progress",
-  },
-  {
-    id: "3",
-    driverName: "Peter Jones",
-    vehicleNo: "CH01A1234",
-    startLocation: "Airport Terminal 2",
-    endLocation: "Grand Hotel",
-    date: "2025-08-25",
-    status: "Completed",
-  },
-  {
-    id: "4",
-    driverName: "John Doe",
-    vehicleNo: "HR26AB1234",
-    startLocation: "City Mall",
-    endLocation: "Industrial Area",
-    date: "2025-08-24",
-    status: "Cancelled",
-  },
-];
-
-// --- SVG Icons for Filters ---
+// --- (SVG Icons remain the same) ---
 const FilterIcon = () => (
   <Svg width="20" height="20" viewBox="0 0 24 24" fill="none">
     <Path
@@ -72,42 +38,65 @@ const SearchIcon = () => (
   </Svg>
 );
 
-// --- Reusable Components ---
-const TripCard = ({ item, onPress }) => {
+// --- 2. TripCard updated to use the new payload fields ---
+interface TripCardProps {
+  item: TripListItem;
+  onPress: () => void;
+}
+
+const TripCard: React.FC<TripCardProps> = ({ item, onPress }) => {
   const statusStyle =
     item.status === "Completed"
       ? styles.statusCompleted
-      : item.status === "In Progress"
-      ? styles.statusInProgress
-      : styles.statusCancelled;
+      : item.status === "Cancelled"
+      ? styles.statusCancelled
+      : styles.statusInProgress;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <View style={styles.cardHeader}>
-        <Text style={styles.driverName}>{item.driverName}</Text>
-        <View style={[styles.statusBadge, statusStyle.container]}>
-          <Text style={[styles.statusText, statusStyle.text]}>
-            {item.status}
-          </Text>
-        </View>
+        <Text style={styles.driverName}>{item.ridername}</Text>
+        {item.status && (
+          <View style={[styles.statusBadge, statusStyle.container]}>
+            <Text style={[styles.statusText, statusStyle.text]}>
+              {item.status}
+            </Text>
+          </View>
+        )}
       </View>
-      <Text style={styles.vehicleNumber}>{item.vehicleNo}</Text>
+      <Text
+        style={styles.vehicleNumber}
+      >{`${item.vehname} • ${item.vehno}`}</Text>
       <View style={styles.routeContainer}>
         <View style={styles.locationRow}>
           <Text style={styles.locationLabel}>From:</Text>
-          <Text style={styles.locationText}>{item.startLocation}</Text>
+          <Text style={styles.locationText} numberOfLines={1}>
+            {item.pickupLocation}
+          </Text>
         </View>
         <View style={styles.locationRow}>
           <Text style={styles.locationLabel}>To:</Text>
-          <Text style={styles.locationText}>{item.endLocation}</Text>
+          <Text style={styles.locationText} numberOfLines={1}>
+            {item.dropLocation}
+          </Text>
         </View>
       </View>
-      <Text style={styles.dateText}>{item.date}</Text>
+      {item.tripdate && <Text style={styles.dateText}>{item.tripdate}</Text>}
     </TouchableOpacity>
   );
 };
 
-const FilterButton = ({ label, onPress, active }) => (
+interface FilterButtonProps {
+  label: string;
+  onPress: () => void;
+  active: boolean;
+}
+
+const FilterButton: React.FC<FilterButtonProps> = ({
+  label,
+  onPress,
+  active,
+}) => (
   <TouchableOpacity
     style={[styles.filterButton, active && styles.filterButtonActive]}
     onPress={onPress}
@@ -121,30 +110,39 @@ const FilterButton = ({ label, onPress, active }) => (
 );
 
 // --- Main Screen Component ---
-const TripListScreen = () => {
-  const navigation = useNavigation();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeFilter, setActiveFilter] = useState("All"); // e.g., 'All', 'Completed', 'In Progress'
+const TripListScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
+  const { ownerProfile } = useAuthStore();
+  const inputRef = React.useRef<TextInput>(null);
 
-  // Memoized filtering logic
-  const filteredTrips = useMemo(() => {
-    let trips = dummyTrips;
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [statusId, setStatusId] = useState<number | null>(1);
 
-    if (activeFilter !== "All") {
-      trips = trips.filter((trip) => trip.status === activeFilter);
-    }
+  const {
+    data: trips,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useGetTripsByOwner(ownerProfile?.id, statusId, searchQuery);
 
-    if (searchQuery) {
-      const lowercasedQuery = searchQuery.toLowerCase();
-      trips = trips.filter(
-        (trip) =>
-          trip.driverName.toLowerCase().includes(lowercasedQuery) ||
-          trip.vehicleNo.toLowerCase().includes(lowercasedQuery)
-      );
-    }
+  // 3. Create a debounced function to update the search query
+  const debouncedSearch = useCallback(
+    debounce((text: string) => {
+      setSearchQuery(text);
+    }, 500), // 500ms delay
+    []
+  );
 
-    return trips;
-  }, [searchQuery, activeFilter]);
+  const handleSearchChange = (text: string) => {
+    debouncedSearch(text);
+  };
+
+  const statusFilters = [
+    { label: "Completed", id: 1 },
+    { label: "In Progress", id: 2 },
+    { label: "Cancelled", id: 3 },
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -154,60 +152,82 @@ const TripListScreen = () => {
           <SearchIcon />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search by Driver or Vehicle..."
+            placeholder="Search by Rider or Vehicle..."
             placeholderTextColor={colors.gray[400]}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
+            onChangeText={handleSearchChange}
+            // clear input on close icon press
+            ref={inputRef}
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => {
+                setSearchQuery("");
+                if (inputRef.current) {
+                  inputRef.current.clear();
+                }
+              }}
+              style={{ paddingRight: 8 }}
+            >
+              <SvgClose width={10} height={10} />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
       {/* Filter Section */}
       <View style={styles.filterSection}>
         <FilterIcon />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ marginLeft: 8 }}
-        >
-          <FilterButton
-            label="All"
-            active={activeFilter === "All"}
-            onPress={() => setActiveFilter("All")}
-          />
-          <FilterButton
-            label="Completed"
-            active={activeFilter === "Completed"}
-            onPress={() => setActiveFilter("Completed")}
-          />
-          <FilterButton
-            label="In Progress"
-            active={activeFilter === "In Progress"}
-            onPress={() => setActiveFilter("In Progress")}
-          />
-          <FilterButton
-            label="Cancelled"
-            active={activeFilter === "Cancelled"}
-            onPress={() => setActiveFilter("Cancelled")}
-          />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {statusFilters.map((filter) => (
+            <FilterButton
+              key={filter.label}
+              label={filter.label}
+              active={statusId === filter.id}
+              onPress={() => setStatusId(filter.id)}
+            />
+          ))}
         </ScrollView>
       </View>
 
-      {/* Trip List */}
-      <FlatList
-        data={filteredTrips}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TripCard
-            item={item}
-            onPress={() =>
-              navigation.navigate("TripDetailsScreen", { tripId: item.id })
-            }
-          />
-        )}
-        contentContainerStyle={styles.listContainer}
-        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-      />
+      {isLoading ? (
+        <ActivityIndicator
+          style={{ marginTop: 50 }}
+          size="large"
+          color={colors.brand.primary}
+        />
+      ) : isError ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.errorText}>Failed to load trips.</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => refetch()}
+          >
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={trips || []}
+          keyExtractor={(item) => item.tripNo} // Use a unique key like tripNo
+          renderItem={({ item }) => (
+            <TripCard
+              item={item}
+              onPress={() =>
+                navigation.navigate("TripDetailsScreen", {
+                  tripId: item.tripNo,
+                })
+              }
+            />
+          )}
+          contentContainerStyle={styles.listContainer}
+          ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No trips found.</Text>
+            </View>
+          )}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -335,6 +355,33 @@ const styles = StyleSheet.create({
     textAlign: "right",
     marginTop: 8,
     color: colors.gray[400],
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: "30%",
+  },
+  emptyText: {
+    ...TYPOGRAPHY.header,
+    fontSize: 18,
+    color: colors.gray[600],
+  },
+  errorText: {
+    ...TYPOGRAPHY.header,
+    color: colors.status.error,
+  },
+  retryButton: {
+    marginTop: 20,
+    backgroundColor: colors.brand.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    ...TYPOGRAPHY.title,
+    fontSize: 16,
+    color: colors.base.white,
   },
 });
 
