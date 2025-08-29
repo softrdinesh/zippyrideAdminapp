@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { getItem, setItem, removeItem } from "../utils/mmkvStorage";
+import { mmkvStorageAdapter } from "../utils/mmkvStorage";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 interface OwnerProfile {
   id: number;
@@ -18,38 +19,39 @@ interface AuthState {
   setIsVehicleTag: (value: boolean) => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  isAuthenticated: getItem("isAuthenticated") === "true",
-  isVehicleTag: getItem("isVehicleTag") === "true",
-  ownerProfile: JSON.parse(getItem("ownerProfile") || "null"),
-  token: getItem("token"),
-
-  authenticateOwner: (profile: any) => {
-    set({
-      isAuthenticated: true,
-      ownerProfile: profile,
-      isVehicleTag: profile.isVehicleTag,
-      token: profile.token,
-    });
-    setItem("isAuthenticated", "true");
-    setItem("ownerProfile", JSON.stringify(profile));
-    setItem("token", profile.token);
-  },
-
-  logoutOwner: () => {
-    set({
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
       isAuthenticated: false,
-      ownerProfile: null,
       isVehicleTag: false,
+      ownerProfile: null,
       token: null,
-    });
-    removeItem("isAuthenticated");
-    removeItem("ownerProfile");
-    removeItem("token");
-  },
 
-  setIsVehicleTag: (value: boolean) => {
-    set({ isVehicleTag: value });
-    setItem("isVehicleTag", value.toString());
-  },
-}));
+      authenticateOwner: (profile) => {
+        set({
+          isAuthenticated: true,
+          ownerProfile: profile,
+          isVehicleTag: profile.isVehicleTag,
+          token: profile.token,
+        });
+      },
+
+      logoutOwner: () => {
+        set({
+          isAuthenticated: false,
+          ownerProfile: null,
+          isVehicleTag: false,
+          token: null,
+        });
+      },
+
+      setIsVehicleTag: (value) => {
+        set({ isVehicleTag: value });
+      },
+    }),
+    {
+      name: "auth-storage",
+      storage: createJSONStorage(() => mmkvStorageAdapter),
+    }
+  )
+);
