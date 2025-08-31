@@ -73,9 +73,9 @@ export const CustomDrawerContent = (props) => {
               style={styles.avatar}
             />
             <Text style={styles.title}>{ownerProfile?.name || "John Doe"}</Text>
-            <Text style={styles.caption}>
-              {ownerProfile?.email || "john.doe@example.com"}
-            </Text>
+            {ownerProfile?.mobileno && (
+              <Text style={styles.caption}>{ownerProfile?.mobileno}</Text>
+            )}
           </View>
 
           {/* Divider */}

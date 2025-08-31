@@ -233,6 +233,7 @@ const SignInScreen = () => {
         authenticateOwner({
           id: response.ownerID.toString(),
           username: response.userName,
+          mobileno: response.mobileno,
           token: response.tokenvalue,
           isVehicleTag: response.isvehicleTag,
         });
