@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 interface OwnerProfile {
   id: number;
   username: string;
+  profilepic: string;
   mobileno: string;
   token: string;
   isVehicleTag: boolean;
