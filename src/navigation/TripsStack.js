@@ -1,11 +1,9 @@
-import { Text, StyleSheet } from "react-native"; // Import StyleSheet
 import { createStackNavigator } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
 
 import { CustomHeader } from "../uikit/CustomDrawerHeader";
-import { colors } from "../uikit/UikitUtils/colors";
-import { TYPOGRAPHY } from "../theme/typography";
 import TripListScreen from "../Screens/Trips/tripListScreen";
+import TripDetailsScreen from "../Screens/Trips/tripDetailsScreen";
 
 const Stack = createStackNavigator();
 
@@ -44,14 +42,13 @@ export const TripsNavigator = () => {
           title: "All Trips",
         }}
       />
+      <Stack.Screen
+        name="TripDetailsScreen"
+        component={TripDetailsScreen}
+        options={{
+          title: "Trip Details",
+        }}
+      />
     </Stack.Navigator>
   );
 };
-
-const styles = StyleSheet.create({
-  headerActionText: {
-    ...TYPOGRAPHY.body,
-    color: colors.brand.primary,
-    fontWeight: "600",
-  },
-});

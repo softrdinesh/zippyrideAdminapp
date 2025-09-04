@@ -221,9 +221,7 @@ const TripListScreen: React.FC = () => {
               item={item}
               index={index}
               onPress={() =>
-                navigation.navigate("TripDetailsScreen", {
-                  tripId: item.tripNo,
-                })
+                navigation.navigate("TripDetailsScreen", { trip: item })
               }
             />
           )}
