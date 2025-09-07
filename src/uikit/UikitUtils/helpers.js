@@ -84,6 +84,10 @@ export function getAxiosErrorMessage(error) {
     if (error.response.data?.message) {
       return error.response.data.message;
     }
+
+    if (error.response.data.title) {
+      return error.response.data.title;
+    }
     return `Error: ${error.response.status}`;
   } else if (error.request) {
     // Request was made but no response received

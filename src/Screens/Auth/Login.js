@@ -232,7 +232,9 @@ const SignInScreen = () => {
         // Dispatch owner authentication
         authenticateOwner({
           id: response.ownerID.toString(),
-          username: response.userName,
+          username: response.username,
+          profilepic: response.profilepic,
+          mobileno: response.mobileno,
           token: response.tokenvalue,
           isVehicleTag: response.isvehicleTag,
         });

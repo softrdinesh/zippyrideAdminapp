@@ -67,15 +67,15 @@ export const CustomDrawerContent = (props) => {
             <Image
               source={{
                 uri:
-                  ownerProfile?.profilePic ||
-                  "https://placehold.co/80x80/E0E0E0/333?text=JD",
+                  ownerProfile?.profilepic ||
+                  `https://placehold.co/60x60/png?font=poppins&text=${ownerProfile?.username[0].toUpperCase()}`,
               }}
               style={styles.avatar}
             />
-            <Text style={styles.title}>{ownerProfile?.name || "John Doe"}</Text>
-            <Text style={styles.caption}>
-              {ownerProfile?.email || "john.doe@example.com"}
-            </Text>
+            <Text style={styles.title}>{ownerProfile?.username || ""}</Text>
+            {ownerProfile?.mobileno && (
+              <Text style={styles.caption}>{ownerProfile?.mobileno}</Text>
+            )}
           </View>
 
           {/* Divider */}
