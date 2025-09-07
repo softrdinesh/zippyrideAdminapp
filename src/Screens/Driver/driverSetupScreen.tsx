@@ -29,9 +29,13 @@ import InputText from "../../uikit/InputText/InputText";
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
 import SvgCameraIcon from "../../icons/SvgCameraIcon";
-import { useCreateDriver } from "../../services/api/driver";
+import { useCreateDriver, useEditDriver } from "../../services/api/driver";
 import { useGetVehiclesByOwnerId } from "../../services/api";
-import { useFocusEffect } from "@react-navigation/native";
+import {
+  StackActions,
+  useFocusEffect,
+  useNavigation,
+} from "@react-navigation/native";
 import PhoneInputText from "../../uikit/PhoneInputText/PhoneInputText";
 
 const validationSchema = Yup.object().shape({
@@ -46,7 +50,13 @@ const validationSchema = Yup.object().shape({
   DriverPicFile: Yup.string().required("Driver photo is required"),
 });
 
-const DriverSetupScreen = ({ navigation }) => {
+const DriverSetupScreen = ({ route }) => {
+  const navigation = useNavigation();
+  const mobileInputRef = useRef();
+  const whatsappInputRef = useRef();
+  const { driver } = route.params || {};
+  const isEdit = !!driver;
+
   const modalRef = useRef(null);
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [countryCode, setCountryCode] = useState("+91");
@@ -58,9 +68,12 @@ const DriverSetupScreen = ({ navigation }) => {
     isLoading: isLoadingVehicles,
   } = useGetVehiclesByOwnerId(ownerProfile?.id);
   const createDriverMutation = useCreateDriver();
+  const editDriverMutation = useEditDriver();
 
-  const isLoading = isLoadingVehicles || createDriverMutation.isPending;
-  console.log("vehicles", vehicles);
+  const isLoading =
+    isLoadingVehicles ||
+    createDriverMutation.isPending ||
+    editDriverMutation.isPending;
 
   const formik = useFormik({
     initialValues: {
@@ -104,23 +117,33 @@ const DriverSetupScreen = ({ navigation }) => {
 
         formData.append("OwnerID", ownerProfile.id);
 
-        const response = await createDriverMutation.mutateAsync(formData);
+        let response;
+        if (isEdit) {
+          formData.append("LoginUserID", ownerProfile.id);
+          formData.append("IsActive", true);
+          formData.append("DriverID", driver.driverID);
+          response = await editDriverMutation.mutateAsync(formData);
+        } else {
+          response = await createDriverMutation.mutateAsync(formData);
+        }
         console.log("RESPONSE ==>", response);
 
-        if (response?.driverID) {
-          // Assuming a success code
+        if (response?.code === 5999) {
+          // Check for a successful response
           Toast.show({
             type: "success",
             text1: "Success",
-            text2: response?.message || "Driver created successfully",
+            text2: `Driver ${isEdit ? "updated" : "created"} successfully`,
           });
           resetForm();
-          navigation.goBack();
+          navigation.dispatch(StackActions.popToTop());
         } else {
           Toast.show({
             type: "error",
             text1: "Error",
-            text2: response?.message || "Failed to create driver.",
+            text2:
+              response?.message ||
+              `Failed to ${isEdit ? "update" : "create"} driver.`,
           });
         }
       } catch (error) {
@@ -129,7 +152,42 @@ const DriverSetupScreen = ({ navigation }) => {
       }
     },
   });
-  console.log("formik", formik.errors);
+
+  useEffect(() => {
+    if (isEdit && driver && vehicles) {
+      console.log("driver", driver);
+
+      formik.setValues({
+        Drivername: driver.drivername || "",
+        Username: driver.riderLoginAccountname || "",
+        Mobileno: driver.mobileNo || "",
+        Whatsappno: driver.whatsappno || "",
+        Gpayno: driver.gpayno || "",
+        Paytmno: driver.paytmno || "",
+        Telegarmid: driver.telegramID || "",
+        Licenseno: driver.licenseNo || "",
+        Licenseexpirydate: driver.licenseExpirydate
+          ? moment(driver.licenseExpirydate, "DD-MM-YYYY").toDate()
+          : new Date(),
+        Address: driver.riderAddress || "",
+        VehicleID: driver.vehId || "",
+        IsFemailDriver: driver.isFemale === 1,
+        DriverPicFile: driver.riderpic || "",
+      });
+      if (mobileInputRef.current) {
+        mobileInputRef.current.setState({
+          ...mobileInputRef.current.state,
+          number: driver.mobileNo.replace("+91", ""),
+        });
+      }
+      if (whatsappInputRef.current) {
+        whatsappInputRef.current.setState({
+          ...whatsappInputRef.current.state,
+          number: driver.whatsappno.replace("+91", ""),
+        });
+      }
+    }
+  }, [isEdit, driver, vehicles]);
 
   const handleImageSelected = (image) => {
     formik.setFieldValue("DriverPicFile", image.path);
@@ -164,7 +222,7 @@ const DriverSetupScreen = ({ navigation }) => {
                   source={
                     formik.values.DriverPicFile
                       ? { uri: formik.values.DriverPicFile }
-                      : require("../../assets/camera12.png") // A default placeholder
+                      : require("../../assets/camera12.png")
                   }
                   style={styles.driverImage}
                 />
@@ -172,7 +230,9 @@ const DriverSetupScreen = ({ navigation }) => {
                   <SvgCameraIcon />
                 </View>
               </TouchableOpacity>
-              <Text style={styles.addDriverImage}>Add Driver Photo</Text>
+              <Text style={styles.addDriverImage}>
+                {isEdit ? "Edit" : "Add"} Driver Photo
+              </Text>
               {formik.touched.DriverPicFile && formik.errors.DriverPicFile && (
                 <Text style={styles.errorText}>
                   {formik.errors.DriverPicFile}
@@ -209,6 +269,7 @@ const DriverSetupScreen = ({ navigation }) => {
 
               <Text style={styles.label}>Mobile Number</Text>
               <PhoneInputText
+                ref={mobileInputRef}
                 placeholder="Enter mobile number"
                 name={"mobileno"}
                 error={formik.errors.Mobileno && formik.touched.Mobileno}
@@ -222,9 +283,13 @@ const DriverSetupScreen = ({ navigation }) => {
                 }}
                 containerStyle={styles.phoneInput}
               />
+              {formik.touched.Mobileno && formik.errors.Mobileno && (
+                <Text style={styles.errorText}>{formik.errors.Mobileno}</Text>
+              )}
 
               <Text style={styles.label}>WhatsApp Number</Text>
               <PhoneInputText
+                ref={whatsappInputRef}
                 placeholder="Enter Whatsapp number"
                 name={"Whatsappno"}
                 error={formik.errors.Whatsappno && formik.touched.Whatsappno}
@@ -238,6 +303,9 @@ const DriverSetupScreen = ({ navigation }) => {
                 }}
                 containerStyle={styles.phoneInput}
               />
+              {formik.touched.Whatsappno && formik.errors.Whatsappno && (
+                <Text style={styles.errorText}>{formik.errors.Whatsappno}</Text>
+              )}
 
               <Text style={styles.label}>Address</Text>
               <View>
@@ -379,7 +447,9 @@ const DriverSetupScreen = ({ navigation }) => {
                 style={styles.button}
                 onPress={formik.handleSubmit}
               >
-                <Text style={styles.buttonText}>Submit Driver Details</Text>
+                <Text style={styles.buttonText}>
+                  {isEdit ? "Update Driver Details" : "Submit Driver Details"}
+                </Text>
               </TouchableOpacity>
             </View>
           </ScrollView>

@@ -40,3 +40,10 @@ export const useCreateDriver = () => {
       api.postFormData("api/Driver/DriverSignup", formData),
   });
 };
+
+export const useEditDriver = () => {
+  return useMutation({
+    mutationFn: (formData: FormData) =>
+      api.postFormData("api/Driver/UpdateDriverInfo", formData),
+  });
+};

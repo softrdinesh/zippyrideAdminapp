@@ -53,18 +53,25 @@ export const DriverNavigator = () => {
         }}
       />
       <Stack.Screen
-        name="DriverSetupScreen"
-        component={DriverSetupScreen}
-        options={{
-          title: "Add Driver",
-        }}
-      />
-      <Stack.Screen
         name="DriverDetailsScreen"
         component={DriverDetailsScreen}
-        options={{
+        options={({ route }) => ({
           title: "Driver Details",
-        }}
+          onHeaderRightPress: () => {
+            navigation.navigate("DriverSetupScreen", {
+              driver: route.params.driver,
+            });
+          },
+
+          headerRightIcon: <Text style={styles.headerActionText}>Edit</Text>,
+        })}
+      />
+      <Stack.Screen
+        name="DriverSetupScreen"
+        component={DriverSetupScreen}
+        options={({ route }) => ({
+          title: route.params?.driver ? "Edit Driver" : "Add Driver",
+        })}
       />
     </Stack.Navigator>
   );
