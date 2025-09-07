@@ -91,7 +91,7 @@ const DriverListScreen: React.FC = () => {
             item={item}
             onPress={() =>
               navigation.navigate("DriverDetailsScreen", {
-                driverId: item,
+                driver: item,
               })
             }
           />

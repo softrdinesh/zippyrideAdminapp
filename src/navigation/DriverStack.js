@@ -9,6 +9,7 @@ import DriverListScreen from "../Screens/Driver/driverListScreen";
 import { colors } from "../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../theme/typography";
 import { StyleSheet, Text } from "react-native";
+import DriverDetailsScreen from "../Screens/Driver/driverDetailsScreen";
 
 const Stack = createStackNavigator();
 
@@ -56,6 +57,13 @@ export const DriverNavigator = () => {
         component={DriverSetupScreen}
         options={{
           title: "Add Driver",
+        }}
+      />
+      <Stack.Screen
+        name="DriverDetailsScreen"
+        component={DriverDetailsScreen}
+        options={{
+          title: "Driver Details",
         }}
       />
     </Stack.Navigator>

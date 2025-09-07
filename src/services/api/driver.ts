@@ -22,6 +22,7 @@ export interface DriverDetails {
   vehId: number;
   vehiclename: string;
   vehicleno: string;
+  telegramID: string;
 }
 
 export const useGetDriversByOwnerID = (ownerId?: number) => {
