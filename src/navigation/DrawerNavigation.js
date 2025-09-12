@@ -1,25 +1,54 @@
 import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 
-import ProfileScreen from "../Screens/Profile/profileScreen";
 import { VehicleNavigator } from "./VehicleStack";
 import { CustomDrawerContent } from "../uikit/CustomDrawerContent";
 import { TripsNavigator } from "./TripsStack";
 import { DriverNavigator } from "./DriverStack";
+import PaymentScreen from "../Screens/Payment/PaymentScreen";
+import { CustomHeader } from "../uikit/CustomDrawerHeader";
 
 const Drawer = createDrawerNavigator();
 
 export const MainDrawer = () => {
   return (
     <Drawer.Navigator
-      screenOptions={{
+      screenOptions={({ navigation, route }) => ({
         headerShown: false,
-      }}
+        header: ({ options }) => {
+          const canGoBack = navigation.canGoBack();
+          const title = options?.title || route.name;
+
+          return (
+            <CustomHeader
+              title={title}
+              canGoBack={canGoBack}
+              onRightPress={options.onHeaderRightPress}
+              rightIcon={options.headerRightIcon}
+              onLeftPress={() => {
+                if (canGoBack) {
+                  navigation.goBack();
+                } else {
+                  navigation.getParent()?.openDrawer();
+                }
+              }}
+            />
+          );
+        },
+      })}
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
       <Drawer.Screen name="VehicleSetup" component={VehicleNavigator} />
       <Drawer.Screen name="TripDetails" component={TripsNavigator} />
       <Drawer.Screen name="TrackYourDriver" component={DriverNavigator} />
+      <Drawer.Screen
+        name="PaymentScreen"
+        component={PaymentScreen}
+        options={{
+          headerShown: true,
+          title: "Payment",
+        }}
+      />
     </Drawer.Navigator>
   );
 };
