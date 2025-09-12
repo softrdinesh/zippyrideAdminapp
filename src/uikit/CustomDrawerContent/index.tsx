@@ -15,6 +15,7 @@ import { TYPOGRAPHY } from "../../theme/typography";
 import SvgDriver from "../../icons/SvgDriver";
 import SvgCarIcon from "../../icons/SvgCarIcon";
 import { colors } from "../UikitUtils/colors";
+import PaymentMethod from "../../icons/SvgPaymentMethod";
 
 const LogoutIcon = ({ color = colors.gray[600], size = 24 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -85,6 +86,7 @@ export const CustomDrawerContent = (props) => {
           {renderDrawerItem("VehicleSetup", "Vehicle Setup", SvgCarIcon)}
           {renderDrawerItem("TripDetails", "Trip Details", SvgDriver)}
           {renderDrawerItem("TrackYourDriver", "Track your driver", SvgDriver)}
+          {renderDrawerItem("PaymentScreen", "Payment", PaymentMethod)}
         </View>
       </DrawerContentScrollView>
 

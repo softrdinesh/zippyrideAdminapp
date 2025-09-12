@@ -2,11 +2,10 @@ import axios, { AxiosError } from "axios";
 import Toast from "react-native-toast-message";
 import { useAuthStore } from "../zustand/useAuthStore";
 import { handleApiError, ApiError } from "../utils/errorHandlers";
-
-export const BASE_URL = "https://uat.zippyrideadminapi.projectpulse360.com/";
+import { config } from "./config";
 
 const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: config.BASE_URL,
   timeout: 100000,
   headers: {
     "Content-Type": "application/json",
@@ -20,6 +19,13 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log(
+      `🚀 [API Request] ${config.method?.toUpperCase()} | ${config.url}`,
+      {
+        headers: config.headers,
+        data: config.data,
+      }
+    );
     return config;
   },
   (error) => {
@@ -30,8 +36,30 @@ apiClient.interceptors.request.use(
 
 // Response interceptor
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // --- DEBUG LOGGING ---
+    console.log(
+      `✅ [API Response] ${response.config.method?.toUpperCase()} | ${
+        response.config.url
+      }`,
+      {
+        status: response.status,
+        data: response.data,
+      }
+    );
+    // ---------------------
+    return response;
+  },
   (error: AxiosError) => {
+    console.log(
+      `❌ [API Error] ${error.config?.method?.toUpperCase()} | ${
+        error.config?.url
+      }`,
+      {
+        message: error.message,
+        response: error.response?.data,
+      }
+    );
     const apiError = handleApiError(error);
 
     // Show toast for errors
