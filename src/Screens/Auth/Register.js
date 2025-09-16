@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -27,7 +27,11 @@ import Geolocation from "@react-native-community/geolocation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Svg, { Path, Circle, Rect, G } from "react-native-svg";
-import { useSignup } from "../../services/api";
+import {
+  useSignup,
+  useGetCountries,
+  useGetLocations,
+} from "../../services/api";
 
 import PhoneInputText from "../../uikit/PhoneInputText/PhoneInputText";
 import Loader from "../../uikit/Loader/Loader";
@@ -46,9 +50,12 @@ const Register = () => {
   const colorScheme = useColorScheme();
   const modalizeRef = useRef(null);
   const navigation = useNavigation();
+  const { data: countries, isLoading: isLoadingCountries } = useGetCountries();
+  const { data: allLocations, isLoading: isLoadingLocations } =
+    useGetLocations();
   const { mutateAsync: signupMutation, isPending: isSignupLoading } =
     useSignup();
-  const isLoading = isSignupLoading;
+  const isLoading = isSignupLoading || isLoadingCountries || isLoadingLocations;
   const [countryCode, setCountryCode] = useState("+91");
 
   const [profilepick, setprofilepick] = useState("");
@@ -63,25 +70,8 @@ const Register = () => {
 
   useEffect(() => {
     getCurrentLocation();
-    Countryinfo();
   }, []);
 
-  const Countryinfo = async () => {
-    try {
-      const response = await axios.get(
-        `https://uat.zippyrideuserapi.projectpulse360.com/api/users/GetCountryList`
-      );
-      const formattedCountries = response.data.map((country) => ({
-        label: country.countryName,
-        value: country.countryid,
-      }));
-      console.log(formattedCountries, "formattedCountries");
-
-      setcountrylist(formattedCountries);
-    } catch (error) {
-      console.error("Error fetching user info:", error);
-    }
-  };
   const getCurrentLocation = async () => {
     Geolocation.getCurrentPosition(
       async (position) => {
@@ -118,6 +108,7 @@ const Register = () => {
     address: Yup.string().required("Address is required"),
     country: Yup.string().required("Country is required"),
     profilepick: Yup.string().required("Profile image is required"),
+    locationID: Yup.number().required("Location is required"),
   });
 
   const formik = useFormik({
@@ -132,7 +123,7 @@ const Register = () => {
       address: "",
       country: "",
       profilepick: "",
-      // location: ''
+      locationID: "",
     },
     validationSchema: SignUpSchema,
     onSubmit: async (values) => {
@@ -143,6 +134,7 @@ const Register = () => {
         formdata.append("Mobileno", values.mobileno);
         formdata.append("Companyname", values.companyname);
         formdata.append("CountryID", values.country);
+        formdata.append("LocationID", values.locationID);
         formdata.append("Whatsappno", values.whatsappno);
         // Attach image if selected, with dynamic name and type
         if (values.profilepick) {
@@ -179,6 +171,17 @@ const Register = () => {
       }
     },
   });
+
+  const filteredLocations = useMemo(() => {
+    if (!formik.values.country || !allLocations) {
+      return []; // Return an empty array if no country is selected or locations haven't loaded
+    }
+    console.log("allLocations", allLocations);
+
+    return allLocations.filter(
+      (location) => location.countryID === formik.values.country
+    );
+  }, [allLocations, formik.values.country]);
 
   //   if (!image || !useridref.current) return;
 
@@ -481,20 +484,52 @@ const Register = () => {
                 selectedTextStyle={styles.selectedTextStyle}
                 inputSearchStyle={styles.inputSearchStyle}
                 iconStyle={styles.iconStyle}
-                data={countrylist}
+                data={countries}
                 search
                 maxHeight={300}
-                labelField="label"
-                valueField="value"
+                labelField="countryName"
+                valueField="countryID"
                 placeholder="Select country"
                 searchPlaceholder="Search country..."
                 value={formik.values.country}
-                onChange={(item) => formik.setFieldValue("country", item.value)}
+                onChange={(item) => {
+                  formik.setFieldValue("country", item.countryID);
+                  formik.setFieldValue("locationID", "");
+                }}
                 itemTextStyle={styles.dropdownItemText}
                 activeColor="#f5f5f5"
               />
               {formik.touched.country && formik.errors.country && (
                 <Text style={styles.errorText}>{formik.errors.country}</Text>
+              )}
+              <Text style={styles.label}>Location</Text>
+              <Dropdown
+                style={[
+                  styles.dropdown,
+                  formik.errors.locationID &&
+                    formik.touched.locationID &&
+                    styles.errorBorder,
+                ]}
+                placeholderStyle={styles.placeholderStyle}
+                selectedTextStyle={styles.selectedTextStyle}
+                data={filteredLocations}
+                maxHeight={300}
+                labelField="locationName"
+                valueField="locationID"
+                placeholder={
+                  !formik.values.country
+                    ? "Select a country first"
+                    : "Select location"
+                }
+                value={formik.values.locationID}
+                onChange={(item) =>
+                  formik.setFieldValue("locationID", item.locationID)
+                }
+                itemTextStyle={styles.dropdownItemText}
+                disable={!formik.values.country || isLoadingLocations}
+              />
+              {formik.touched.locationID && formik.errors.locationID && (
+                <Text style={styles.errorText}>{formik.errors.locationID}</Text>
               )}
 
               <Text style={styles.termsText}>

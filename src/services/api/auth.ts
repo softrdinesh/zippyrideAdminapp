@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "../apiClient";
 
 interface LoginPayload {
@@ -14,6 +14,17 @@ interface LoginResponse {
   userName: string;
   token: string;
   isFirstLogin: boolean;
+}
+
+export interface CountryListItem {
+  countryID: number;
+  countryName: string;
+}
+
+export interface LocationListItem {
+  locationID: number;
+  locationName: string;
+  countryID: number;
 }
 
 export const useLogin = () => {
@@ -33,5 +44,18 @@ export const useForgotPassword = () => {
   return useMutation({
     mutationFn: (data: { email: string }) =>
       api.post("users/forgot-password", data),
+  });
+};
+
+export const useGetCountries = () => {
+  return useQuery<CountryListItem[], Error>({
+    queryKey: ["countries"],
+    queryFn: () => api.get("GetCountryList"),
+  });
+};
+export const useGetLocations = () => {
+  return useQuery<LocationListItem[], Error>({
+    queryKey: ["locations"],
+    queryFn: () => api.get("GetLocationList"),
   });
 };
