@@ -6,12 +6,19 @@ import {
   ScrollView,
   Image,
   SafeAreaView,
+  Alert,
+  TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
 import Svg, { Path } from "react-native-svg";
-import { DriverDetails } from "../../services/api/driver";
+import {
+  DriverDetails,
+  useResetDriverPassword,
+} from "../../services/api/driver";
 import PaymentMethod from "../../icons/SvgPaymentMethod";
+import Toast from "react-native-toast-message";
 
 const PhoneIcon = ({ color = colors.gray[500] }) => (
   <Svg width="18" height="18" viewBox="0 0 24 24">
@@ -66,6 +73,15 @@ const TelegramIcon = ({ color = colors.gray[500] }) => (
   </Svg>
 );
 
+const KeyIcon = ({ color = colors.gray[500] }) => (
+  <Svg width="18" height="18" viewBox="0 0 24 24">
+    <Path
+      fill={color}
+      d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"
+    />
+  </Svg>
+);
+
 const InfoCard = ({
   title,
   children,
@@ -112,10 +128,41 @@ const Rating = ({ rating }: { rating: number | null }) => {
   );
 };
 
-// --- Main Screen Component ---
 const DriverDetailsScreen: React.FC = ({ route }: any) => {
-  // 2. Get the full driver object directly from route params
   const { driver }: { driver: DriverDetails } = route.params;
+
+  const resetPasswordMutation = useResetDriverPassword();
+
+  const handleResetPassword = () => {
+    Alert.alert(
+      "Reset Password",
+      `Are you sure you want to reset the password for ${driver.drivername}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reset",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const response = await resetPasswordMutation.mutateAsync({
+                driverID: driver.driverID,
+              });
+
+              Toast.show({
+                type: "success",
+                text1: "Password Reset",
+                text2:
+                  response?.message ||
+                  `Password for ${driver.drivername} has been reset.`,
+              });
+            } catch (error) {
+              console.error("Failed to reset password:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const getStatusStyle = () => {
     return driver.driverStatus === "Active"
@@ -202,6 +249,23 @@ const DriverDetailsScreen: React.FC = ({ route }: any) => {
             value={driver.paytmno}
           />
         </InfoCard>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Account Actions</Text>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleResetPassword}
+            disabled={resetPasswordMutation.isPending}
+          >
+            {resetPasswordMutation.isPending ? (
+              <ActivityIndicator color={colors.brand.primary} />
+            ) : (
+              <>
+                <KeyIcon />
+                <Text style={styles.actionButtonText}>Reset Password</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -306,6 +370,19 @@ const styles = StyleSheet.create({
   },
   vehicleIcon: {
     fontSize: 16,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: colors.gray[100],
+    borderRadius: 8,
+  },
+  actionButtonText: {
+    ...TYPOGRAPHY.body,
+    fontWeight: "500",
+    marginLeft: 12,
   },
 });
 
