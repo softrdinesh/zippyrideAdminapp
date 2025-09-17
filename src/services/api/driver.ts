@@ -25,6 +25,10 @@ export interface DriverDetails {
   telegramID: string;
 }
 
+export interface ResetPasswordPayload {
+  driverID: number;
+}
+
 export const useGetDriversByOwnerID = (ownerId?: number) => {
   return useQuery<DriverDetails[], Error>({
     queryKey: ["driverDetails", ownerId],
@@ -45,5 +49,11 @@ export const useEditDriver = () => {
   return useMutation({
     mutationFn: (formData: FormData) =>
       api.postFormData("api/Driver/UpdateDriverInfo", formData),
+  });
+};
+
+export const useResetDriverPassword = () => {
+  return useMutation<any, Error, ResetPasswordPayload>({
+    mutationFn: (data) => api.post("api/Driver/DrivePasswordReset", data),
   });
 };
