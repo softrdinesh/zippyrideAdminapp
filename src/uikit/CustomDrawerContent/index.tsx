@@ -17,6 +17,7 @@ import SvgCarIcon from "../../icons/SvgCarIcon";
 import { colors } from "../UikitUtils/colors";
 import PaymentMethod from "../../icons/SvgPaymentMethod";
 import { firebase } from "@react-native-firebase/messaging";
+import SvgOwnerIcon from "../../icons/SvgOwner";
 
 const LogoutIcon = ({ color = colors.gray[600], size = 24 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -91,6 +92,13 @@ export const CustomDrawerContent = (props) => {
           {renderDrawerItem("TripDetails", "Trip Details", SvgDriver)}
           {renderDrawerItem("TrackYourDriver", "Track your driver", SvgDriver)}
           {renderDrawerItem("PaymentScreen", "Payment", PaymentMethod)}
+          {userProfile?.isSuperAdmin && (
+            <>
+              <View style={styles.divider} />
+              <Text style={styles.drawerSectionTitle}>Super Admin</Text>
+              {renderDrawerItem("OwnerManagement", "Owners", SvgOwnerIcon)}
+            </>
+          )}
         </View>
       </DrawerContentScrollView>
 
@@ -164,5 +172,13 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     borderTopWidth: 1,
     borderTopColor: colors.gray[100],
+  },
+  drawerSectionTitle: {
+    ...TYPOGRAPHY.caption,
+    color: colors.gray[400],
+    paddingHorizontal: 20,
+    marginTop: 10,
+    marginBottom: 5,
+    textTransform: "uppercase",
   },
 });

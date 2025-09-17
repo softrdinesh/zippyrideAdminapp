@@ -7,10 +7,13 @@ import { TripsNavigator } from "./TripsStack";
 import { DriverNavigator } from "./DriverStack";
 import PaymentScreen from "../Screens/Payment/PaymentScreen";
 import { CustomHeader } from "../uikit/CustomDrawerHeader";
+import { useAuthStore } from "../zustand/useAuthStore";
+import { OwnerNavigator } from "./OwnerStack";
 
 const Drawer = createDrawerNavigator();
 
 export const MainDrawer = () => {
+  const { userProfile } = useAuthStore();
   return (
     <Drawer.Navigator
       screenOptions={({ navigation, route }) => ({
@@ -41,6 +44,13 @@ export const MainDrawer = () => {
       <Drawer.Screen name="VehicleSetup" component={VehicleNavigator} />
       <Drawer.Screen name="TripDetails" component={TripsNavigator} />
       <Drawer.Screen name="TrackYourDriver" component={DriverNavigator} />
+      {userProfile?.isSuperAdmin && (
+        <Drawer.Screen
+          name="OwnerManagement"
+          component={OwnerNavigator}
+          options={{ headerShown: false }}
+        />
+      )}
       <Drawer.Screen
         name="PaymentScreen"
         component={PaymentScreen}
