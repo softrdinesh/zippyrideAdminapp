@@ -45,14 +45,14 @@ const VehicleCard = ({ vehicle, onPress }) => {
 
 // Main component for the Vehicle List Screen
 const VehicleListScreen = () => {
-  const { ownerProfile } = useAuthStore();
+  const { userProfile } = useAuthStore();
   const navigation = useNavigation();
 
   const {
     data: vehicles,
     refetch,
     isFetching: isLoadingVehicles,
-  } = useGetVehiclesByOwnerId(ownerProfile?.id);
+  } = useGetVehiclesByOwnerId(userProfile?.id);
 
   useFocusEffect(
     useCallback(() => {

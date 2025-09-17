@@ -33,7 +33,7 @@ const CheckCircleIcon = () => (
 );
 
 const PaymentScreen: React.FC = () => {
-  const { ownerProfile } = useAuthStore();
+  const { userProfile } = useAuthStore();
   const [isPaying, setIsPaying] = useState(false);
 
   const {
@@ -41,7 +41,7 @@ const PaymentScreen: React.FC = () => {
     isLoading: isLoadingInfo,
     isError,
     refetch,
-  } = useGetPaymentInfo(ownerProfile?.id);
+  } = useGetPaymentInfo(userProfile?.id);
 
   const generateOrderMutation = useGenerateRazorpayOrder();
   const updatePaymentMutation = useUpdateOnlinePayment();
@@ -73,8 +73,8 @@ const PaymentScreen: React.FC = () => {
         name: "ZippyRide Admin",
         order_id: order.id,
         prefill: {
-          contact: ownerProfile?.mobileno || "9999999999",
-          name: ownerProfile?.username || "Admin User",
+          contact: userProfile?.mobileno || "9999999999",
+          name: userProfile?.username || "Admin User",
         },
         theme: { color: colors.brand.primary },
       };
@@ -83,7 +83,7 @@ const PaymentScreen: React.FC = () => {
       console.log("paymentResponse", paymentResponse);
 
       await updatePaymentMutation.mutateAsync({
-        ownerID: ownerProfile?.id,
+        ownerID: userProfile?.id,
         razorpaymentID: paymentResponse.razorpay_payment_id,
       });
 
@@ -100,11 +100,11 @@ const PaymentScreen: React.FC = () => {
       const isCancelledByUser = error.code === 0;
 
       // Log the failure to your backend
-      if (ownerProfile?.id && orderIdForFailureHandling) {
+      if (userProfile?.id && orderIdForFailureHandling) {
         try {
           // Construct the new payload based on the curl request
           const failurePayload = {
-            ownerID: ownerProfile.id,
+            ownerID: userProfile.id,
             razorpaymentID: orderIdForFailureHandling, // The API expects the order_id here
             amount: paymentInfo.amount,
             isCancelpayment: isCancelledByUser,

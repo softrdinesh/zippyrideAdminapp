@@ -119,7 +119,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({
 // --- Main Screen Component ---
 const TripListScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { ownerProfile } = useAuthStore();
+  const { userProfile } = useAuthStore();
   const inputRef = React.useRef<TextInput>(null);
 
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -131,7 +131,7 @@ const TripListScreen: React.FC = () => {
     isError,
     error,
     refetch,
-  } = useGetTripsByOwner(ownerProfile?.id, statusId, searchQuery);
+  } = useGetTripsByOwner(userProfile?.id, statusId, searchQuery);
 
   // 3. Create a debounced function to update the search query
   const debouncedSearch = useCallback(

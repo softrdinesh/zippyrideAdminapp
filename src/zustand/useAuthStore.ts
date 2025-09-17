@@ -2,22 +2,27 @@ import { create } from "zustand";
 import { mmkvStorageAdapter } from "../utils/mmkvStorage";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-interface OwnerProfile {
+interface UserProfile {
   id: number;
   username: string;
   profilepic: string;
   mobileno: string;
   token: string;
-  isVehicleTag: boolean;
+  isVehicleTag?: boolean;
+  // New Admin-specific fields
+  isSuperAdmin?: boolean;
+  locationID?: number;
+  countryID?: number;
 }
 
 interface AuthState {
   isAuthenticated: boolean;
   isVehicleTag: boolean;
-  ownerProfile: OwnerProfile | null;
+  userProfile: UserProfile | null;
+  userRole: "owner" | "admin" | null;
   token: string | null;
-  authenticateOwner: (profile: OwnerProfile) => void;
-  logoutOwner: () => void;
+  loginUser: (profile: UserProfile, role: "owner" | "admin") => void;
+  logoutUser: () => void;
   setIsVehicleTag: (value: boolean) => void;
 }
 
@@ -26,23 +31,24 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       isAuthenticated: false,
       isVehicleTag: false,
-      ownerProfile: null,
+      userProfile: null,
+      userRole: null,
       token: null,
 
-      authenticateOwner: (profile) => {
+      loginUser: (profile, role) => {
         set({
           isAuthenticated: true,
-          ownerProfile: profile,
-          isVehicleTag: profile.isVehicleTag,
+          userProfile: profile,
+          userRole: role,
           token: profile.token,
         });
       },
 
-      logoutOwner: () => {
+      logoutUser: () => {
         set({
           isAuthenticated: false,
-          ownerProfile: null,
-          isVehicleTag: false,
+          userProfile: null,
+          userRole: null,
           token: null,
         });
       },

@@ -48,7 +48,7 @@ const DriverCard = ({ item, onPress }) => {
 
 const DriverListScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { ownerProfile } = useAuthStore();
+  const { userProfile } = useAuthStore();
 
   const {
     data: drivers,
@@ -56,7 +56,7 @@ const DriverListScreen: React.FC = () => {
     isError,
     error,
     refetch,
-  } = useGetDriversByOwnerID(ownerProfile?.id);
+  } = useGetDriversByOwnerID(userProfile?.id);
 
   useFocusEffect(
     useCallback(() => {

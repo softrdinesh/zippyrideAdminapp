@@ -28,6 +28,7 @@ import { getItem, setItem } from "../../utils/mmkvStorage";
 import Loader from "../../uikit/Loader/Loader";
 import { useForgotPassword, useLogin } from "../../services/api";
 import { useAuthStore } from "../../zustand/useAuthStore";
+import { useAdminLogin } from "../../services/api/admin-auth";
 
 const { width, height } = Dimensions.get("window");
 
@@ -36,9 +37,12 @@ const SignInScreen = () => {
   const [hidePassword, setHidePassword] = useState(true);
   const [loading, setLoading] = useState(false);
   const [locationReady, setLocationReady] = useState(false);
-  const loginMutation = useLogin();
+  const [role, setRole] = useState("owner");
 
-  const { authenticateOwner } = useAuthStore();
+  const loginMutation = useLogin();
+  const adminLoginMutation = useAdminLogin();
+
+  const { loginUser } = useAuthStore();
 
   const forgotPasswordMutation = useForgotPassword();
   const locationRef = useRef({
@@ -183,14 +187,21 @@ const SignInScreen = () => {
   const SignUpSchema = Yup.object().shape({
     username: Yup.string().required("Please Enter username"),
     password: Yup.string()
-      .min(8, "Password must be at least 8 characters")
+
+      .when("role", {
+        is: "owner",
+        then: (schema) =>
+          schema.min(8, "Password must be at least 8 characters"),
+      })
       .required("Password is required"),
+    role: Yup.string().oneOf(["owner", "admin"]).required(),
   });
 
   const formik = useFormik({
     initialValues: {
       username: "",
       password: "",
+      role: "owner",
     },
     validationSchema: SignUpSchema,
     onSubmit: async (values) => {
@@ -207,75 +218,75 @@ const SignInScreen = () => {
 
       setLoading(true);
       try {
-        const fcmToken = await messaging().getToken();
-        const payload = {
-          username: values.username,
-          password: values.password,
-          deviceToken: fcmToken,
-          longtitude: locationRef.current.longitude?.toString(),
-          latitude: locationRef.current.latitude?.toString(),
-        };
+        let response;
+        let success = false;
 
-        const response = await loginMutation.mutateAsync(payload);
+        if (values.role === "owner") {
+          // --- Owner Login Flow ---
+          const fcmToken = await messaging().getToken();
+          const payload = {
+            username: values.username,
+            password: values.password,
+            deviceToken: fcmToken,
+            longtitude: locationRef.current.longitude?.toString(),
+            latitude: locationRef.current.latitude?.toString(),
+          };
+          response = await loginMutation.mutateAsync(payload);
 
+          if (response?.loginStatus) {
+            loginUser(
+              {
+                id: response.ownerID.toString(),
+                username: response.username,
+                profilepic: response.profilepic,
+                mobileno: response.mobileno,
+                token: response.tokenvalue,
+                isVehicleTag: response.isvehicleTag,
+              },
+              "owner"
+            );
+            success = true;
+          }
+        } else {
+          // --- Admin Login Flow ---
+          const payload = {
+            accountID: values.username,
+            password: values.password,
+          };
+          response = await adminLoginMutation.mutateAsync(payload);
+
+          if (response?.code === 5999 && response?.token) {
+            loginUser(
+              {
+                id: 0,
+                username: values.username,
+                token: response.token,
+                isSuperAdmin: response.issuperadmin,
+                locationID: response.locationID,
+                countryID: response.countryID,
+              },
+              "admin"
+            );
+            success = true;
+          }
+        }
         console.log("Login response:", response);
 
-        if (!response?.loginStatus) {
+        // --- Common Success/Error Handling ---
+        if (success) {
+          Toast.show({
+            type: "success",
+            text1: "Success",
+            text2: "Login successful",
+          });
+          formik.resetForm();
+        } else {
           Toast.show({
             type: "error",
             text1: "Error",
             text2: response?.message || "Invalid credentials",
           });
-          return;
         }
-        // INFO: New code
-        // Dispatch owner authentication
-        authenticateOwner({
-          id: response.ownerID.toString(),
-          username: response.username,
-          profilepic: response.profilepic,
-          mobileno: response.mobileno,
-          token: response.tokenvalue,
-          isVehicleTag: response.isvehicleTag,
-        });
-
-        // Show success toast
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: "Login successful",
-          position: "top",
-        });
-
-        // Store auth data
-        setItem("token", `Bearer ${response.tokenvalue}`);
-
-        // INFO: Earlier code
-        // // Save user info
-        // dispatch(login());
-        // setItem("userdata", response.data.ownerID.toString());
-        // // setItem("name", response.data.userName);
-        // setItem("token", `Bearer ${response.data.tokenvalue}`);
-
-        // Toast.show({
-        //   type: "success",
-        //   text1: "Success",
-        //   text2: `${values.username} OTP sent successfully`,
-        //   position: "top",
-        // });
-
-        // await Resendvalue(values.username);
-
-        // // Navigate to OTP screen
-        // setItem("email", values.username);
-        // setItem("otpverified", "false");
-
-        // // Navigate to OTP verification
-        // navigation.navigate("Loginotpverificationscreen", {
-        //   username: values.username,
-        // });
-
-        formik.resetForm();
       } catch (error) {
         setLoading(false);
         Toast.show({
@@ -403,8 +414,47 @@ const SignInScreen = () => {
               )}
             </View>
           </View>
+          <View style={styles.roleSelectorContainer}>
+            <TouchableOpacity
+              style={[
+                styles.roleButton,
+                formik.values.role === "owner" && styles.roleButtonActive,
+              ]}
+              onPress={() => formik.setFieldValue("role", "owner")}
+            >
+              <Text
+                style={[
+                  styles.roleButtonText,
+                  formik.values.role === "owner" && styles.roleButtonTextActive,
+                ]}
+              >
+                Owner
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.roleButton,
+                formik.values.role === "admin" && styles.roleButtonActive,
+              ]}
+              onPress={() => formik.setFieldValue("role", "admin")}
+            >
+              <Text
+                style={[
+                  styles.roleButtonText,
+                  formik.values.role === "admin" && styles.roleButtonTextActive,
+                ]}
+              >
+                Admin
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-          <Text style={styles.label}>Enter Username</Text>
+          {/* 8. Dynamic Label */}
+          <Text style={styles.label}>
+            {formik.values.role === "owner"
+              ? "Enter Username"
+              : "Enter Account ID"}
+          </Text>
           <InputText
             name="username"
             touched={formik.touched}
@@ -412,7 +462,11 @@ const SignInScreen = () => {
             error={formik.errors.username && formik.touched.username}
             maxLength={50}
             keyboardType="text"
-            placeholder="Enter username"
+            placeholder={
+              formik.values.role === "owner"
+                ? "Enter username"
+                : "Enter account ID"
+            }
             value={formik.values.username}
             onChange={formik.handleChange("username")}
           />
@@ -562,6 +616,37 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginRight: 8,
+  },
+  roleSelectorContainer: {
+    flexDirection: "row",
+    backgroundColor: "#E9ECEF",
+    borderRadius: 8,
+    padding: 4,
+    marginBottom: 20,
+    width: "100%",
+  },
+  roleButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 6,
+  },
+  roleButtonActive: {
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  roleButtonText: {
+    textAlign: "center",
+    fontWeight: "500",
+    fontSize: 14,
+    color: "#868E96",
+  },
+  roleButtonTextActive: {
+    color: "#343A40",
+    fontWeight: "600",
   },
 });
 

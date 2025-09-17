@@ -73,7 +73,7 @@ const VehicleSetupScreen = ({ route }) => {
   });
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
 
-  const { ownerProfile, setIsVehicleTag } = useAuthStore();
+  const { userProfile, setIsVehicleTag } = useAuthStore();
   const { data, isLoading: isLoadingVehicleDetails } =
     useGetVehicleById(vehicleId);
   const { data: colorsData, isLoading: isLoadingColors } =
@@ -131,7 +131,7 @@ const VehicleSetupScreen = ({ route }) => {
         });
 
         // Add required fields
-        formData.append("OwnerId", ownerProfile.id);
+        formData.append("OwnerId", userProfile.id);
 
         console.log("Submitting Vehicle Setup Form:", formData);
 

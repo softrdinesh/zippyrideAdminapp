@@ -29,7 +29,7 @@ const LogoutIcon = ({ color = colors.gray[600], size = 24 }) => (
 export const CustomDrawerContent = (props) => {
   const { state, navigation } = props;
   const { routes, index } = state;
-  const { ownerProfile, logoutOwner } = useAuthStore();
+  const { userProfile, logoutUser } = useAuthStore();
   const focusedRoute = routes[index].name;
 
   const handleLogout = () => {
@@ -37,7 +37,7 @@ export const CustomDrawerContent = (props) => {
       { text: "Cancel", style: "cancel" },
       {
         text: "OK",
-        onPress: () => logoutOwner(),
+        onPress: () => logoutUser(),
       },
     ]);
   };
@@ -68,14 +68,14 @@ export const CustomDrawerContent = (props) => {
             <Image
               source={{
                 uri:
-                  ownerProfile?.profilepic ||
-                  `https://placehold.co/60x60/png?font=poppins&text=${ownerProfile?.username[0].toUpperCase()}`,
+                  userProfile?.profilepic ||
+                  `https://placehold.co/60x60/png?font=poppins&text=${userProfile?.username[0].toUpperCase()}`,
               }}
               style={styles.avatar}
             />
-            <Text style={styles.title}>{ownerProfile?.username || ""}</Text>
-            {ownerProfile?.mobileno && (
-              <Text style={styles.caption}>{ownerProfile?.mobileno}</Text>
+            <Text style={styles.title}>{userProfile?.username || ""}</Text>
+            {userProfile?.mobileno && (
+              <Text style={styles.caption}>{userProfile?.mobileno}</Text>
             )}
           </View>
 

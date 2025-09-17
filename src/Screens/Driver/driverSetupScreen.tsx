@@ -61,12 +61,12 @@ const DriverSetupScreen = ({ route }) => {
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [countryCode, setCountryCode] = useState("+91");
 
-  const { ownerProfile } = useAuthStore();
+  const { userProfile } = useAuthStore();
   const {
     data: vehicles,
     refetch,
     isLoading: isLoadingVehicles,
-  } = useGetVehiclesByOwnerId(ownerProfile?.id);
+  } = useGetVehiclesByOwnerId(userProfile?.id);
   const createDriverMutation = useCreateDriver();
   const editDriverMutation = useEditDriver();
 
@@ -115,11 +115,11 @@ const DriverSetupScreen = ({ route }) => {
           }
         });
 
-        formData.append("OwnerID", ownerProfile.id);
+        formData.append("OwnerID", userProfile.id);
 
         let response;
         if (isEdit) {
-          formData.append("LoginUserID", ownerProfile.id);
+          formData.append("LoginUserID", userProfile.id);
           formData.append("IsActive", true);
           formData.append("DriverID", driver.driverID);
           response = await editDriverMutation.mutateAsync(formData);
