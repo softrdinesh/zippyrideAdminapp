@@ -283,6 +283,8 @@ const SignInScreen = () => {
           text1: "Error",
           text2: getAxiosErrorMessage(error),
         });
+      } finally {
+        setLoading(false);
       }
     },
   });

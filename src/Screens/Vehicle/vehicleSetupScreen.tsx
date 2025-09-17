@@ -168,7 +168,9 @@ const VehicleSetupScreen = ({ route }) => {
                 onPress: () => {
                   resetForm();
                   setIsVehicleTag(true);
-                  navigation.goBack();
+                  if (navigation.canGoBack()) {
+                    navigation.goBack();
+                  }
                 },
                 style: "cancel",
               },

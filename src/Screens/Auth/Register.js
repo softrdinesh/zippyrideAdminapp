@@ -47,11 +47,10 @@ const { width, height } = Dimensions.get("window");
 const Register = () => {
   const phoneInput = useRef(null);
   const [isSuccess, setSuccess] = useState(false);
-  const colorScheme = useColorScheme();
   const modalizeRef = useRef(null);
   const navigation = useNavigation();
-  const { data: countries, isLoading: isLoadingCountries } = useGetCountries();
-  const { data: allLocations, isLoading: isLoadingLocations } =
+  const { data: countries, isPending: isLoadingCountries } = useGetCountries();
+  const { data: allLocations, isPending: isLoadingLocations } =
     useGetLocations();
   const { mutateAsync: signupMutation, isPending: isSignupLoading } =
     useSignup();
@@ -68,9 +67,9 @@ const Register = () => {
   const [countrylist, setcountrylist] = useState([]);
   const [locationlist, setlocationlist] = useState([]);
 
-  useEffect(() => {
-    getCurrentLocation();
-  }, []);
+  // useEffect(() => {
+  //   getCurrentLocation();
+  // }, []);
 
   const getCurrentLocation = async () => {
     Geolocation.getCurrentPosition(
@@ -484,7 +483,7 @@ const Register = () => {
                 selectedTextStyle={styles.selectedTextStyle}
                 inputSearchStyle={styles.inputSearchStyle}
                 iconStyle={styles.iconStyle}
-                data={countries}
+                data={countries ?? []}
                 search
                 maxHeight={300}
                 labelField="countryName"
@@ -512,7 +511,7 @@ const Register = () => {
                 ]}
                 placeholderStyle={styles.placeholderStyle}
                 selectedTextStyle={styles.selectedTextStyle}
-                data={filteredLocations}
+                data={filteredLocations ?? []}
                 maxHeight={300}
                 labelField="locationName"
                 valueField="locationID"
