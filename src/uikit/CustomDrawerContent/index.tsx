@@ -16,6 +16,7 @@ import SvgDriver from "../../icons/SvgDriver";
 import SvgCarIcon from "../../icons/SvgCarIcon";
 import { colors } from "../UikitUtils/colors";
 import PaymentMethod from "../../icons/SvgPaymentMethod";
+import { firebase } from "@react-native-firebase/messaging";
 
 const LogoutIcon = ({ color = colors.gray[600], size = 24 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -37,7 +38,10 @@ export const CustomDrawerContent = (props) => {
       { text: "Cancel", style: "cancel" },
       {
         text: "OK",
-        onPress: () => logoutUser(),
+        onPress: async () => {
+          await firebase.messaging().deleteToken();
+          logoutUser();
+        },
       },
     ]);
   };
