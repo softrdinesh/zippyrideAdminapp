@@ -7052,6 +7052,11 @@ react-native-modalize@^2.1.1:
   resolved "https://registry.npmjs.org/react-native-modalize/-/react-native-modalize-2.1.1.tgz"
   integrity sha512-4/7EZWsrUqAAkkAVEnOsSdpAPQaEBewX7TvwFuzgvGDzxKpq3O58I9SnSeU8QtG/r91XYHJNaU5dAuDrcLjUaQ==
 
+react-native-network-logger@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/react-native-network-logger/-/react-native-network-logger-2.0.1.tgz#d365d9af0b68fe5ebbb5f80580d4c757558ca23b"
+  integrity sha512-qR03Uvk2ihmII0hX128UOu+ykl7QH2XOqbj3YEcV4pMxj2JA7CvfuasAoLl8FZe0C8JQFHCHX0zo00/RcJdk0g==
+
 react-native-permissions@^5.4.0:
   version "5.4.0"
   resolved "https://registry.npmjs.org/react-native-permissions/-/react-native-permissions-5.4.0.tgz"
