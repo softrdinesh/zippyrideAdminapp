@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { mmkvStorageAdapter } from "../utils/mmkvStorage";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-interface UserProfile {
+export interface UserProfile {
   id: number;
   username: string;
   profilepic: string;

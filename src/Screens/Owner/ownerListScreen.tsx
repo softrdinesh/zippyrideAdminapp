@@ -13,6 +13,7 @@ import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
 import { useGetAllOwners, Owner } from "../../services/api/admin-owner";
+import { useAuthStore } from "../../zustand/useAuthStore";
 
 const OwnerCard = ({ item, onPress }: { item: Owner; onPress: () => void }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
@@ -20,67 +21,37 @@ const OwnerCard = ({ item, onPress }: { item: Owner; onPress: () => void }) => (
       source={{
         uri:
           item.profilepic ||
-          `https://placehold.co/100x100/png?font=poppins&text=${item.username.charAt(
+          `https://placehold.co/100x100/png?font=poppins&text=${item.ownerUsername.charAt(
             0
           )}`,
       }}
       style={styles.avatar}
     />
     <View style={styles.cardDetails}>
-      <Text style={styles.ownerName}>{item.username}</Text>
+      <Text style={styles.ownerName}>{item.ownerUsername}</Text>
       <Text style={styles.companyName}>{item.companyname}</Text>
     </View>
-    {/* Arrow icon indicates it's tappable */}
     <Text style={styles.arrowIcon}>›</Text>
   </TouchableOpacity>
 );
 
-// --- Main Screen Component ---
-const OwnerListScreen = ({ navigation }) => {
-  // 2. Fetch data using the hook (commented out to use mock data for now)
-  // const { data: owners, isLoading, isError, refetch } = useGetAllOwners();
+const OwnerListScreen = ({}) => {
+  const navigation = useNavigation();
+  const { userProfile } = useAuthStore();
 
-  // Using detailed mock data for UI development
-  const owners = [
-    {
-      ownerID: 1,
-      username: "Kevin Macwan",
-      companyname: "ZippyRide Solutions",
-      profilepic: null,
-    },
-    {
-      ownerID: 2,
-      username: "Priya Sharma",
-      companyname: "Sharma Transport",
-      profilepic: "https://placehold.co/100x100/png?font=poppins&text=PS",
-    },
-    {
-      ownerID: 3,
-      username: "Amit Patel",
-      companyname: "Patel Logistics",
-      profilepic: null,
-    },
-  ];
-  const isLoading = false;
-  const isError = false;
+  const {
+    data: owners,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetAllOwners(userProfile);
 
-  // This ensures the list is refreshed every time the screen is focused
-  // useFocusEffect(useCallback(() => { refetch(); }, [refetch]));
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
 
-  // 3. Add a header right button to navigate to the create screen
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          onPress={() => navigation.navigate("OwnerSetupScreen")}
-        >
-          <Text style={styles.headerButtonText}>Add New</Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
-
-  // 4. Handle Loading State
   if (isLoading) {
     return (
       <View style={styles.loaderContainer}>

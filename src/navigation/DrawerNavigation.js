@@ -13,7 +13,7 @@ import { OwnerNavigator } from "./OwnerStack";
 const Drawer = createDrawerNavigator();
 
 export const MainDrawer = () => {
-  const { userProfile } = useAuthStore();
+  const { userRole } = useAuthStore();
   return (
     <Drawer.Navigator
       screenOptions={({ navigation, route }) => ({
@@ -44,13 +44,6 @@ export const MainDrawer = () => {
       <Drawer.Screen name="VehicleSetup" component={VehicleNavigator} />
       <Drawer.Screen name="TripDetails" component={TripsNavigator} />
       <Drawer.Screen name="TrackYourDriver" component={DriverNavigator} />
-      {userProfile?.isSuperAdmin && (
-        <Drawer.Screen
-          name="OwnerManagement"
-          component={OwnerNavigator}
-          options={{ headerShown: false }}
-        />
-      )}
       <Drawer.Screen
         name="PaymentScreen"
         component={PaymentScreen}
@@ -59,6 +52,13 @@ export const MainDrawer = () => {
           title: "Payment",
         }}
       />
+      {userRole === "admin" && (
+        <Drawer.Screen
+          name="OwnerManagement"
+          component={OwnerNavigator}
+          options={{ headerShown: false }}
+        />
+      )}
     </Drawer.Navigator>
   );
 };

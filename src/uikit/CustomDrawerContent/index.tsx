@@ -31,7 +31,7 @@ const LogoutIcon = ({ color = colors.gray[600], size = 24 }) => (
 export const CustomDrawerContent = (props) => {
   const { state, navigation } = props;
   const { routes, index } = state;
-  const { userProfile, logoutUser } = useAuthStore();
+  const { userProfile, userRole, logoutUser } = useAuthStore();
   const focusedRoute = routes[index].name;
 
   const handleLogout = () => {
@@ -92,10 +92,12 @@ export const CustomDrawerContent = (props) => {
           {renderDrawerItem("TripDetails", "Trip Details", SvgDriver)}
           {renderDrawerItem("TrackYourDriver", "Track your driver", SvgDriver)}
           {renderDrawerItem("PaymentScreen", "Payment", PaymentMethod)}
-          {userProfile?.isSuperAdmin && (
+          {userRole === "admin" && (
             <>
               <View style={styles.divider} />
-              <Text style={styles.drawerSectionTitle}>Super Admin</Text>
+              <Text style={styles.drawerSectionTitle}>
+                {userProfile?.isSuperAdmin && "Super "}Admin
+              </Text>
               {renderDrawerItem("OwnerManagement", "Owners", SvgOwnerIcon)}
             </>
           )}

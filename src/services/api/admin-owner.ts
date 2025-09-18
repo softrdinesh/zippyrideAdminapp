@@ -1,32 +1,49 @@
-// in /services/api.ts
-
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "../apiClient";
+import { UserProfile } from "../../zustand/useAuthStore";
 
-// --- (Keep all your other hooks and types) ---
+export interface OwnerListItem {
+  ownerID: number;
+  ownerUsername: string;
+  companyname: string;
+  locationID: number;
+  countryID: number;
+}
 
-// 1. Interfaces for Owner Management
 export interface Owner {
   ownerID: number;
-  username: string;
+  ownerUsername: string;
   companyname: string;
   mobileno: string;
   address: string;
   countryID: number;
   locationID: number;
   profilepic: string | null;
-  // Add any other fields you need for the details screen
 }
 
 export interface ResetOwnerPasswordPayload {
   ownerID: number;
 }
 
-// 2. New Hooks for Owner Management
-export const useGetAllOwners = () => {
-  return useQuery<Owner[], Error>({
-    queryKey: ["allOwners"],
-    queryFn: () => api.get("api/Admin/GetAllOwners"), // IMPORTANT: Replace with your actual endpoint
+export const useGetAllOwners = (userProfile?: UserProfile | null) => {
+  return useQuery<OwnerListItem[], Error>({
+    queryKey: ["allOwners", userProfile?.token],
+    queryFn: () => {
+      if (!userProfile) {
+        throw new Error("User profile is not available for fetching owners.");
+      }
+
+      let url = "api/Admin/";
+
+      if (userProfile.isSuperAdmin) {
+        url += "GetAllOwnerList";
+      } else {
+        url += `GetAllOwnerListByLocation?LocationID=${userProfile.locationID}&CountryID=${userProfile.countryID}`;
+      }
+
+      return api.get(url);
+    },
+    enabled: !!userProfile?.token,
   });
 };
 
