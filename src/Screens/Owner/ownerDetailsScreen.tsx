@@ -1,0 +1,273 @@
+import React from "react";
+import {
+  View,
+  StyleSheet,
+  Text,
+  ScrollView,
+  Image,
+  SafeAreaView,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
+import { colors } from "../../uikit/UikitUtils/colors";
+import { TYPOGRAPHY } from "../../theme/typography";
+import { Owner, useResetOwnerPassword } from "../../services/api/admin-owner";
+import { TelegramIcon } from "../../icons/SvgTelegramIcon";
+import { PhoneIcon } from "../../icons/SvgPhoneIcon";
+import { KeyIcon } from "../../icons/SvgKeyIcon";
+import { AddressIcon } from "../../icons/SvgAddressIcon";
+
+const InfoCard = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <View style={styles.card}>
+    <Text style={styles.cardTitle}>{title}</Text>
+    {children}
+  </View>
+);
+
+const DetailRowWithIcon = ({
+  Icon,
+  label,
+  value,
+}: {
+  Icon: JSX.Element;
+  label: string;
+  value?: string | null;
+}) => (
+  <View style={styles.detailRow}>
+    <View style={styles.iconWrapper}>{Icon}</View>
+    <View style={styles.textWrapper}>
+      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={styles.detailValue}>{value || "N/A"}</Text>
+    </View>
+  </View>
+);
+
+// --- Main Screen Component ---
+const OwnerDetailsScreen: React.FC = ({ route }: any) => {
+  const navigation = useNavigation();
+  // The full owner object is passed from the list screen
+  const { ownerDetails }: { ownerDetails: Owner } = route.params;
+
+  // For now, we'll use a detailed mock object to ensure all fields are represented
+  const owner = {
+    ownerID: ownerDetails?.ownerID || 1,
+    username: ownerDetails?.username || "Kevin Macwan",
+    companyname: ownerDetails?.companyname || "ZippyRide Solutions",
+    mobileno: ownerDetails?.mobileno || "+91 98765 43210",
+    whatsappno: ownerDetails?.whatsappno || "+91 98765 43210",
+    address: ownerDetails?.address || "123 Tech Park, Silicon Valley, India",
+    countryName: "India", // Assuming you'd join this data
+    locationName: "Chennai", // Assuming you'd join this data
+    telegarmid: "kevin_zippy",
+    profilepic:
+      ownerDetails?.profilepic ||
+      "https://placehold.co/200x200/png?font=poppins&text=KM",
+  };
+
+  const resetPasswordMutation = useResetOwnerPassword();
+
+  const handleResetPassword = () => {
+    Alert.alert(
+      "Reset Password",
+      `Are you sure you want to reset the password for ${owner.username}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reset",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await resetPasswordMutation.mutateAsync({
+                ownerID: owner.ownerID,
+              });
+              Toast.show({
+                type: "success",
+                text1: "Success",
+                text2: "Password has been reset.",
+              });
+            } catch (e) {
+              console.error("Password reset failed:", e);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        {/* Main Profile Section */}
+        <View style={styles.profileSection}>
+          <Image source={{ uri: owner.profilepic }} style={styles.avatar} />
+          <Text style={styles.ownerName}>{owner.username}</Text>
+          <Text style={styles.companyName}>{owner.companyname}</Text>
+        </View>
+
+        {/* Contact Info Card */}
+        <InfoCard title="Contact Information">
+          <DetailRowWithIcon
+            Icon={<PhoneIcon />}
+            label="Mobile"
+            value={owner.mobileno}
+          />
+          <DetailRowWithIcon
+            Icon={<PhoneIcon color={colors.status.success} />}
+            label="WhatsApp"
+            value={owner.whatsappno}
+          />
+          <DetailRowWithIcon
+            Icon={<TelegramIcon />}
+            label="Telegram"
+            value={owner.telegarmid}
+          />
+          <DetailRowWithIcon
+            Icon={<AddressIcon />}
+            label="Address"
+            value={owner.address}
+          />
+        </InfoCard>
+
+        {/* Location Info Card */}
+        <InfoCard title="Location">
+          <DetailRowWithIcon
+            Icon={<AddressIcon />}
+            label="Country"
+            value={owner.countryName}
+          />
+          <DetailRowWithIcon
+            Icon={<AddressIcon />}
+            label="City / Location"
+            value={owner.locationName}
+          />
+        </InfoCard>
+
+        {/* Account Actions Card */}
+        <InfoCard title="Account Actions">
+          <TouchableOpacity
+            style={[styles.actionButton]}
+            onPress={handleResetPassword}
+            disabled={resetPasswordMutation.isPending}
+          >
+            {resetPasswordMutation.isPending ? (
+              <ActivityIndicator color={colors.brand.primary} />
+            ) : (
+              <>
+                <KeyIcon />
+                <Text style={styles.actionButtonText}>Reset Password</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </InfoCard>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.gray[100],
+  },
+  contentContainer: {
+    paddingBottom: 40,
+  },
+  profileSection: {
+    alignItems: "center",
+    paddingVertical: 24,
+    backgroundColor: colors.base.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border.default,
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: colors.gray[100],
+    borderWidth: 3,
+    borderColor: colors.base.white,
+    shadowColor: colors.base.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  ownerName: {
+    ...TYPOGRAPHY.header,
+    marginTop: 16,
+  },
+  companyName: {
+    ...TYPOGRAPHY.body,
+    color: colors.gray[400],
+    marginTop: 4,
+  },
+  card: {
+    backgroundColor: colors.base.white,
+    borderRadius: 12,
+    padding: 20,
+    marginHorizontal: 24,
+    marginTop: 16,
+    shadowColor: colors.base.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  cardTitle: {
+    ...TYPOGRAPHY.title,
+    marginBottom: 8,
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 12,
+  },
+  iconWrapper: {
+    width: 30,
+    alignItems: "center",
+    marginTop: 2,
+  },
+  textWrapper: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  detailLabel: {
+    ...TYPOGRAPHY.caption,
+    color: colors.gray[400],
+  },
+  detailValue: {
+    ...TYPOGRAPHY.body,
+    marginTop: 2,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    backgroundColor: colors.gray[100],
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  actionButtonText: {
+    ...TYPOGRAPHY.body,
+    fontWeight: "500",
+    marginLeft: 12,
+    color: colors.gray[600],
+  },
+  resetButton: {
+    backgroundColor: colors.status.error + "1A", // Error color with opacity
+  },
+  resetButtonText: {
+    color: colors.status.error,
+  },
+});
+
+export default OwnerDetailsScreen;

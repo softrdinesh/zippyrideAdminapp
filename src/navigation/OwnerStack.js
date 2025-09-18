@@ -3,8 +3,8 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
 
 import OwnerListScreen from "../Screens/Owner/ownerListScreen";
+import OwnerDetailScreen from "../Screens/Owner/ownerDetailsScreen";
 // import OwnerSetupScreen from "../Screens/Owner/ownerSetupScreen";
-// import OwnerDetailScreen from "../Screens/Owner/ownerDetailsScreen";
 import { CustomHeader } from "../uikit/CustomDrawerHeader";
 import { colors } from "../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../theme/typography";
@@ -50,7 +50,7 @@ export const OwnerNavigator = () => {
         }}
         component={OwnerListScreen}
       />
-      {/* <Stack.Screen
+      <Stack.Screen
         name="OwnerDetailsScreen"
         options={({ route }) => ({
           title: "Owner Details",
@@ -64,7 +64,7 @@ export const OwnerNavigator = () => {
         })}
         component={OwnerDetailScreen}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="OwnerSetupScreen"
         options={({ route }) => ({
           title: route.params?.ownerId ? "Edit Owner" : "Add Owner",
