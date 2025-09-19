@@ -41,23 +41,26 @@ export const MainDrawer = () => {
       })}
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
-      <Drawer.Screen name="VehicleSetup" component={VehicleNavigator} />
-      <Drawer.Screen name="TripDetails" component={TripsNavigator} />
-      <Drawer.Screen name="TrackYourDriver" component={DriverNavigator} />
-      <Drawer.Screen
-        name="PaymentScreen"
-        component={PaymentScreen}
-        options={{
-          headerShown: true,
-          title: "Payment",
-        }}
-      />
-      {userRole === "admin" && (
+      {userRole === "admin" ? (
         <Drawer.Screen
           name="OwnerManagement"
           component={OwnerNavigator}
           options={{ headerShown: false }}
         />
+      ) : (
+        <>
+          <Drawer.Screen name="VehicleSetup" component={VehicleNavigator} />
+          <Drawer.Screen name="TripDetails" component={TripsNavigator} />
+          <Drawer.Screen name="TrackYourDriver" component={DriverNavigator} />
+          <Drawer.Screen
+            name="PaymentScreen"
+            component={PaymentScreen}
+            options={{
+              headerShown: true,
+              title: "Payment",
+            }}
+          />
+        </>
       )}
     </Drawer.Navigator>
   );

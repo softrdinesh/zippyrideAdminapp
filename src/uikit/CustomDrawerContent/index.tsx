@@ -84,21 +84,27 @@ export const CustomDrawerContent = (props) => {
             )}
           </View>
 
-          {/* Divider */}
-          <View style={styles.divider} />
-
-          {/* List of Options */}
-          {renderDrawerItem("VehicleSetup", "Vehicle Setup", SvgCarIcon)}
-          {renderDrawerItem("TripDetails", "Trip Details", SvgDriver)}
-          {renderDrawerItem("TrackYourDriver", "Track your driver", SvgDriver)}
-          {renderDrawerItem("PaymentScreen", "Payment", PaymentMethod)}
-          {userRole === "admin" && (
+          {userRole === "admin" ? (
             <>
-              <View style={styles.divider} />
               <Text style={styles.drawerSectionTitle}>
                 {userProfile?.isSuperAdmin && "Super "}Admin
               </Text>
+              <View style={styles.divider} />
               {renderDrawerItem("OwnerManagement", "Owners", SvgOwnerIcon)}
+            </>
+          ) : (
+            <>
+              {/* Divider */}
+              <View style={styles.divider} />
+              {/* List of Options */}
+              {renderDrawerItem("VehicleSetup", "Vehicle Setup", SvgCarIcon)}
+              {renderDrawerItem("TripDetails", "Trip Details", SvgDriver)}
+              {renderDrawerItem(
+                "TrackYourDriver",
+                "Track your driver",
+                SvgDriver
+              )}
+              {renderDrawerItem("PaymentScreen", "Payment", PaymentMethod)}
             </>
           )}
         </View>
