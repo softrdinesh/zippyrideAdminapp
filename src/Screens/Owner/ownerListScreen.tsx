@@ -15,7 +15,11 @@ import { TYPOGRAPHY } from "../../theme/typography";
 import { useGetAllOwners, Owner } from "../../services/api/admin-owner";
 import { useAuthStore } from "../../zustand/useAuthStore";
 
-const OwnerCard = ({ item, onPress }: { item: Owner; onPress: () => void }) => (
+const OwnerCard = ({ item, onPress }: { item: Owner; onPress: () => void }) => {
+  const statusStyle =
+    item.status === "Active" ? styles.statusActive : styles.statusInactive;
+
+  return (
   <TouchableOpacity style={styles.card} onPress={onPress}>
     <Image
       source={{
@@ -30,10 +34,17 @@ const OwnerCard = ({ item, onPress }: { item: Owner; onPress: () => void }) => (
     <View style={styles.cardDetails}>
       <Text style={styles.ownerName}>{item.ownerUsername}</Text>
       <Text style={styles.companyName}>{item.companyname}</Text>
+
+        <View style={[styles.statusBadge, statusStyle.container]}>
+          <Text style={[styles.statusText, statusStyle.text]}>
+            {item.status}
+          </Text>
+        </View>
     </View>
     <Text style={styles.arrowIcon}>›</Text>
   </TouchableOpacity>
 );
+};
 
 const OwnerListScreen = ({}) => {
   const navigation = useNavigation();
@@ -148,6 +159,24 @@ const styles = StyleSheet.create({
     color: colors.brand.primary,
     fontWeight: "600",
     marginRight: 16,
+  },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+  },
+  statusText: {
+    ...TYPOGRAPHY.caption,
+    fontWeight: "bold",
+  },
+  statusActive: {
+    container: { backgroundColor: colors.status.success + "20" },
+    text: { color: colors.status.success },
+  },
+  statusInactive: {
+    container: { backgroundColor: colors.status.error + "20" },
+    text: { color: colors.status.error },
   },
   loaderContainer: {
     flex: 1,
