@@ -295,7 +295,7 @@ const VehicleSetupScreen = ({ route }) => {
               touched={formik.touched}
               errors={formik.errors}
               error={formik.errors.Vehno && formik.touched.Vehno}
-              maxLength={8}
+              maxLength={10}
               placeholder="Enter your vehicle number"
               value={formik.values.Vehno}
               onChange={formik.handleChange("Vehno")}
