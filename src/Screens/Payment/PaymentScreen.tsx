@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import RazorpayCheckout from "react-native-razorpay";
 import Svg, { Path } from "react-native-svg";
@@ -22,6 +21,7 @@ import {
   useUpdateFailedPayment,
 } from "../../services/api/payment";
 import { config } from "../../services/config";
+import { useFocusEffect } from "@react-navigation/native";
 
 const CheckCircleIcon = () => (
   <Svg width="80" height="80" viewBox="0 0 24 24">
@@ -137,7 +137,11 @@ const PaymentScreen: React.FC = () => {
     }
   };
 
-  // --- UI Rendering ---
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [])
+  );
 
   if (isLoadingInfo) {
     return (

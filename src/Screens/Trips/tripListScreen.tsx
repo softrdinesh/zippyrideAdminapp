@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { debounce } from "lodash";
@@ -150,6 +150,12 @@ const TripListScreen: React.FC = () => {
     { label: "In Progress", id: 2 },
     { label: "Cancelled", id: 3 },
   ];
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [])
+  );
 
   return (
     <SafeAreaView style={styles.container}>

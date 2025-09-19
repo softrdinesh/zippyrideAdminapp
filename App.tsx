@@ -21,8 +21,11 @@ const Stack = createStackNavigator();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
-      staleTime: 5 * 60 * 1000,
+      retry: 3,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      refetchOnReconnect: "always",
+      staleTime: 20 * 1000,
     },
   },
 });
