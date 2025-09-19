@@ -41,6 +41,7 @@ export const useAuthStore = create<AuthState>()(
           userProfile: profile,
           userRole: role,
           token: profile.token,
+          isVehicleTag: profile.isVehicleTag,
         });
       },
 

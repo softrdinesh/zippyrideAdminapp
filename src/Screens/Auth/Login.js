@@ -29,6 +29,7 @@ import Loader from "../../uikit/Loader/Loader";
 import { useForgotPassword, useLogin } from "../../services/api";
 import { useAuthStore } from "../../zustand/useAuthStore";
 import { useAdminLogin } from "../../services/api/admin-auth";
+import { getAxiosErrorMessage } from "../../uikit/UikitUtils/helpers";
 
 const { width, height } = Dimensions.get("window");
 
@@ -220,10 +221,9 @@ const SignInScreen = () => {
       try {
         let response;
         let success = false;
-
+        const fcmToken = await messaging().getToken();
         if (values.role === "owner") {
           // --- Owner Login Flow ---
-          const fcmToken = await messaging().getToken();
           const payload = {
             username: values.username,
             password: values.password,
@@ -252,6 +252,7 @@ const SignInScreen = () => {
           const payload = {
             accountID: values.username,
             password: values.password,
+            Devicetoken: fcmToken,
           };
           response = await adminLoginMutation.mutateAsync(payload);
 
@@ -264,6 +265,7 @@ const SignInScreen = () => {
                 isSuperAdmin: response.issuperadmin,
                 locationID: response.locationID,
                 countryID: response.countryID,
+                isVehicleTag: true,
               },
               "admin"
             );
