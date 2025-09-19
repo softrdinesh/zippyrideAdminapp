@@ -8,14 +8,18 @@ import {
   Image,
   SafeAreaView,
   ActivityIndicator,
+  Alert,
+  Switch,
 } from "react-native";
-import { useGetVehicleById } from "../../services/api";
+import Toast from "react-native-toast-message";
+import { useFocusEffect } from "@react-navigation/native";
+
+import { useGetVehicleById, useToggleVehicleStatus } from "../../services/api";
 import { colors } from "../../uikit/UikitUtils/colors";
 import SvgCarIcon from "../../icons/SvgCarIcon";
-import { useFocusEffect } from "@react-navigation/native";
-import { TYPOGRAPHY } from "../../theme/typography"; // Import your typography styles
+import { TYPOGRAPHY } from "../../theme/typography";
+import { useActiveOwnerId } from "../../zustand/useAuthStore";
 
-// A reusable component for key-value pairs
 const DetailRow = ({ label, value }) => (
   <View style={styles.detailRow}>
     <Text style={styles.detailLabel}>{label}</Text>
@@ -23,9 +27,8 @@ const DetailRow = ({ label, value }) => (
   </View>
 );
 
-// A new component for displaying boolean features in a grid
 const FeatureBox = ({ label, value }) => {
-  if (!value) return null; // Don't render if the feature is false
+  if (!value) return null;
   return (
     <View style={styles.featureBox}>
       <Text style={styles.featureText}>{label}</Text>
@@ -42,6 +45,43 @@ const VehicleDetailScreen = ({ route }) => {
     error,
     refetch,
   } = useGetVehicleById(vehicleId);
+  const activeOwnerId = useActiveOwnerId();
+  vehicle;
+  const isActive = vehicle?.isActive;
+
+  const toggleStatusMutation = useToggleVehicleStatus();
+
+  const handleToggleStatus = (newValue: boolean) => {
+    const action = newValue ? "enable" : "disable";
+    Alert.alert(
+      `${action.charAt(0).toUpperCase() + action.slice(1)} Vehicle`,
+      `Are you sure you want to ${action} this vehicle (${vehicle.vehName})?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: `Yes, ${action.charAt(0).toUpperCase() + action.slice(1)}`,
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await toggleStatusMutation.mutateAsync({
+                ownerID: activeOwnerId,
+                vehicleID: vehicle.vehId,
+                isEnable: newValue,
+              });
+
+              Toast.show({
+                type: "success",
+                text1: "Status Updated",
+                text2: `Vehicle has been ${action}d.`,
+              });
+            } catch (e) {
+              console.error("Failed to toggle vehicle status:", e);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -123,6 +163,31 @@ const VehicleDetailScreen = ({ route }) => {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Other Details</Text>
           <Text style={styles.notesText}>{vehicle.others}</Text>
+        </View>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Vehicle Status</Text>
+          <View style={styles.statusRow}>
+            <View style={styles.statusTextContainer}>
+              <Text style={styles.actionButtonText}>Vehicle is</Text>
+              <Text style={styles.statusLabel}>
+                {isActive ? "Active" : "Disabled"}
+              </Text>
+            </View>
+            {toggleStatusMutation.isPending ? (
+              <ActivityIndicator color={colors.brand.primary} />
+            ) : (
+              <Switch
+                trackColor={{
+                  false: colors.gray[200],
+                  true: colors.status.success + "40",
+                }}
+                thumbColor={isActive ? colors.status.success : colors.gray[300]}
+                ios_backgroundColor={colors.gray[200]}
+                onValueChange={handleToggleStatus}
+                value={isActive}
+              />
+            )}
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -264,6 +329,32 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.title,
     fontSize: 16,
     color: colors.base.white,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    backgroundColor: colors.gray[100],
+    borderRadius: 8,
+  },
+  actionButtonText: {
+    ...TYPOGRAPHY.body,
+    fontWeight: "500",
+    color: colors.gray[600],
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 4,
+  },
+  statusTextContainer: {
+    flex: 1,
+  },
+  statusLabel: {
+    ...TYPOGRAPHY.caption,
+    color: colors.gray[400],
+    marginTop: 2,
   },
 });
 

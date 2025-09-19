@@ -59,6 +59,12 @@ interface Vehicle {
   FcexpiryDate: string;
 }
 
+export interface ToggleVehicleStatusPayload {
+  ownerID: number;
+  vehicleID: number;
+  isEnable: boolean;
+}
+
 export const useGetVehicleColors = () => {
   return useQuery<VehicleColor[]>({
     queryKey: ["vehicleColors"],
@@ -101,5 +107,19 @@ export const useGetVehicleById = (vehicleId) => {
     queryFn: () =>
       api.get(`api/Vehicles/GetSpecificVehicleDetails/${vehicleId}`),
     enabled: !!vehicleId, // The query will not run until vehicleId is available
+  });
+};
+
+export const useToggleVehicleStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<any, Error, ToggleVehicleStatusPayload>({
+    mutationFn: (data) => api.post("api/Admin/EnableDisableVehicles", data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+      queryClient.invalidateQueries({
+        queryKey: ["vehicle", variables.vehicleID],
+      });
+    },
   });
 };
