@@ -46,7 +46,7 @@ const VehicleDetailScreen = ({ route }) => {
   useFocusEffect(
     useCallback(() => {
       refetch();
-    }, [refetch]) // Added refetch to dependency array
+    }, [])
   );
 
   if (isLoading) {

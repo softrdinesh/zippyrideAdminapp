@@ -38,6 +38,7 @@
     "react-native-modal": "^14.0.0-rc.1",
     "react-native-modal-datetime-picker": "^18.0.0",
     "react-native-modalize": "^2.1.1",
+    "react-native-network-logger": "^2.0.1",
     "react-native-permissions": "^5.4.0",
     "react-native-phone-number-input": "^2.1.0",
     "react-native-ratings": "^8.1.0",

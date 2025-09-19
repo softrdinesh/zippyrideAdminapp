@@ -11,6 +11,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import VehicleSetup from "./src/Screens/Vehicle/vehicleSetupScreen";
 import Toast from "react-native-toast-message";
 import { MainDrawer } from "./src/navigation/DrawerNavigation";
+import DebugNetworkLogger from "./src/uikit/DebugNetworkLogger";
+import DebugTriggerButton from "./src/uikit/DebugNetworkLogger/FloatingButton";
 
 enableScreens();
 
@@ -19,8 +21,11 @@ const Stack = createStackNavigator();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
-      staleTime: 5 * 60 * 1000,
+      retry: 3,
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      refetchOnReconnect: "always",
+      staleTime: 20 * 1000,
     },
   },
 });
@@ -71,6 +76,8 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView>
         <SafeAreaProvider>
+          <DebugTriggerButton />
+          <DebugNetworkLogger />
           <NavigationContainer
             ref={navigationRef}
             onReady={() => {
