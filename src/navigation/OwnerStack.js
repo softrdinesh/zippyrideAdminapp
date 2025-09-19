@@ -8,6 +8,10 @@ import OwnerSetupScreen from "../Screens/Owner/ownerSetupScreen";
 import { CustomHeader } from "../uikit/CustomDrawerHeader";
 import { colors } from "../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../theme/typography";
+import { VehicleNavigator } from "./VehicleStack";
+import { TripsNavigator } from "./TripsStack";
+import PaymentScreen from "../Screens/Payment/PaymentScreen";
+import { DriverNavigator } from "./DriverStack";
 
 const Stack = createStackNavigator();
 
@@ -70,6 +74,34 @@ export const OwnerNavigator = () => {
           title: route.params?.ownerId ? "Edit Owner" : "Add Owner",
         })}
         component={OwnerSetupScreen}
+      />
+      <Stack.Screen
+        name="VehicleManagement"
+        component={VehicleNavigator}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="TripManagement"
+        component={TripsNavigator}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="DriverManagement"
+        component={DriverNavigator}
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="PaymentManagement"
+        component={PaymentScreen}
+        options={{
+          headerShown: false,
+        }}
       />
     </Stack.Navigator>
   );

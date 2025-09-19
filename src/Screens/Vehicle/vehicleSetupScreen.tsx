@@ -31,7 +31,7 @@ import CommonModal from "../../uikit/CommonModal";
 import SvgCameraIcon from "../../icons/SvgCameraIcon";
 import ImageUploadModal from "../../uikit/ImageUploadModal/Index";
 import CheckBox from "../../uikit/CheckBox/CheckBox";
-import { useAuthStore } from "../../zustand/useAuthStore";
+import { useActiveOwnerId, useAuthStore } from "../../zustand/useAuthStore";
 import InputText from "../../uikit/InputText/InputText";
 import { colors } from "../../uikit/UikitUtils/colors"; // Import your colors
 import { TYPOGRAPHY } from "../../theme/typography"; // Import your typography
@@ -73,7 +73,8 @@ const VehicleSetupScreen = ({ route }) => {
   });
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
 
-  const { userProfile, setIsVehicleTag } = useAuthStore();
+  const { setIsVehicleTag } = useAuthStore();
+  const activeOwnerId = useActiveOwnerId();
   const { data, isLoading: isLoadingVehicleDetails } =
     useGetVehicleById(vehicleId);
   const { data: colorsData, isLoading: isLoadingColors } =
@@ -131,7 +132,7 @@ const VehicleSetupScreen = ({ route }) => {
         });
 
         // Add required fields
-        formData.append("OwnerId", userProfile.id);
+        formData.append("OwnerId", activeOwnerId);
 
         console.log("Submitting Vehicle Setup Form:", formData);
 

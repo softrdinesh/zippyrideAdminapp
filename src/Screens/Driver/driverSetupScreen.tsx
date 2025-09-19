@@ -24,7 +24,7 @@ import moment from "moment";
 import Loader from "../../uikit/Loader/Loader";
 import ImageUploadModal from "../../uikit/ImageUploadModal/Index";
 import CheckBox from "../../uikit/CheckBox/CheckBox";
-import { useAuthStore } from "../../zustand/useAuthStore";
+import { useActiveOwnerId } from "../../zustand/useAuthStore";
 import InputText from "../../uikit/InputText/InputText";
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
@@ -61,12 +61,12 @@ const DriverSetupScreen = ({ route }) => {
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [countryCode, setCountryCode] = useState("+91");
 
-  const { userProfile } = useAuthStore();
+  const activeOwnerId = useActiveOwnerId();
   const {
     data: vehicles,
     refetch,
     isLoading: isLoadingVehicles,
-  } = useGetVehiclesByOwnerId(userProfile?.id);
+  } = useGetVehiclesByOwnerId(activeOwnerId);
   const createDriverMutation = useCreateDriver();
   const editDriverMutation = useEditDriver();
 
@@ -115,11 +115,11 @@ const DriverSetupScreen = ({ route }) => {
           }
         });
 
-        formData.append("OwnerID", userProfile.id);
+        formData.append("OwnerID", activeOwnerId);
 
         let response;
         if (isEdit) {
-          formData.append("LoginUserID", userProfile.id);
+          formData.append("LoginUserID", activeOwnerId);
           formData.append("IsActive", true);
           formData.append("DriverID", driver.driverID);
           response = await editDriverMutation.mutateAsync(formData);

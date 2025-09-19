@@ -12,7 +12,7 @@ import {
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
-import { useAuthStore } from "../../zustand/useAuthStore";
+import { useActiveOwnerId } from "../../zustand/useAuthStore";
 import { useGetDriversByOwnerID } from "../../services/api/driver";
 
 const DriverCard = ({ item, onPress }) => {
@@ -48,7 +48,7 @@ const DriverCard = ({ item, onPress }) => {
 
 const DriverListScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { userProfile } = useAuthStore();
+  const activeOwnerId = useActiveOwnerId();
 
   const {
     data: drivers,
@@ -56,7 +56,7 @@ const DriverListScreen: React.FC = () => {
     isError,
     error,
     refetch,
-  } = useGetDriversByOwnerID(userProfile?.id);
+  } = useGetDriversByOwnerID(activeOwnerId);
 
   useFocusEffect(
     useCallback(() => {

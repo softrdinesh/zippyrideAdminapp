@@ -13,7 +13,7 @@ import Toast from "react-native-toast-message";
 
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
-import { useAuthStore } from "../../zustand/useAuthStore";
+import { useActiveOwnerId } from "../../zustand/useAuthStore";
 import {
   useGetPaymentInfo,
   useGenerateRazorpayOrder,
@@ -33,7 +33,7 @@ const CheckCircleIcon = () => (
 );
 
 const PaymentScreen: React.FC = () => {
-  const { userProfile } = useAuthStore();
+  const activeOwnerId = useActiveOwnerId();
   const [isPaying, setIsPaying] = useState(false);
 
   const {
@@ -41,7 +41,7 @@ const PaymentScreen: React.FC = () => {
     isLoading: isLoadingInfo,
     isError,
     refetch,
-  } = useGetPaymentInfo(userProfile?.id);
+  } = useGetPaymentInfo(activeOwnerId);
 
   const generateOrderMutation = useGenerateRazorpayOrder();
   const updatePaymentMutation = useUpdateOnlinePayment();
@@ -83,7 +83,7 @@ const PaymentScreen: React.FC = () => {
       console.log("paymentResponse", paymentResponse);
 
       await updatePaymentMutation.mutateAsync({
-        ownerID: userProfile?.id,
+        ownerID: activeOwnerId,
         razorpaymentID: paymentResponse.razorpay_payment_id,
       });
 
@@ -99,13 +99,11 @@ const PaymentScreen: React.FC = () => {
 
       const isCancelledByUser = error.code === 0;
 
-      // Log the failure to your backend
-      if (userProfile?.id && orderIdForFailureHandling) {
+      if (activeOwnerId && orderIdForFailureHandling) {
         try {
-          // Construct the new payload based on the curl request
           const failurePayload = {
-            ownerID: userProfile.id,
-            razorpaymentID: orderIdForFailureHandling, // The API expects the order_id here
+            ownerID: activeOwnerId,
+            razorpaymentID: orderIdForFailureHandling,
             amount: paymentInfo.amount,
             isCancelpayment: isCancelledByUser,
             ispaymentFail: !isCancelledByUser,
@@ -121,7 +119,6 @@ const PaymentScreen: React.FC = () => {
         }
       }
 
-      // Show a user-friendly message
       if (isCancelledByUser) {
         Toast.show({ type: "info", text1: "Payment Cancelled" });
       } else {
@@ -131,7 +128,6 @@ const PaymentScreen: React.FC = () => {
           text2: error.description || error.message,
         });
       }
-      // --- END OF UPDATED FAILURE LOGIC ---
     } finally {
       setIsPaying(false);
     }

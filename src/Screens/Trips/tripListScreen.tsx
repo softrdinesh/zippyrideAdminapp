@@ -17,7 +17,7 @@ import { debounce } from "lodash";
 
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
-import { useAuthStore } from "../../zustand/useAuthStore";
+import { useActiveOwnerId } from "../../zustand/useAuthStore";
 import { useGetTripsByOwner, TripListItem } from "../../services/api/trips";
 import SvgClose from "../../icons/SvgClose";
 
@@ -119,7 +119,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({
 // --- Main Screen Component ---
 const TripListScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { userProfile } = useAuthStore();
+  const activeOwnerId = useActiveOwnerId();
   const inputRef = React.useRef<TextInput>(null);
 
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -131,7 +131,7 @@ const TripListScreen: React.FC = () => {
     isError,
     error,
     refetch,
-  } = useGetTripsByOwner(userProfile?.id, statusId, searchQuery);
+  } = useGetTripsByOwner(activeOwnerId, statusId, searchQuery);
 
   // 3. Create a debounced function to update the search query
   const debouncedSearch = useCallback(
