@@ -13,10 +13,7 @@ import {
   Keyboard,
 } from "react-native";
 import InputText from "../../uikit/InputText/InputText";
-import { Modalize } from "react-native-modalize";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import ImagePicker from "react-native-image-crop-picker";
-import Toast from "react-native-toast-message";
 import { Dropdown } from "react-native-element-dropdown";
 import { StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -38,6 +35,7 @@ import SvgCameraIcon from "../../icons/SvgCameraIcon";
 import ImageUploadModal from "../../uikit/ImageUploadModal/Index";
 import CommonModal from "../../uikit/CommonModal";
 import { useAuthStore } from "../../zustand/useAuthStore";
+import { colors } from "../../uikit/UikitUtils/colors";
 
 const OwnerSetupScreen = () => {
   const phoneInput = useRef(null);
@@ -45,6 +43,7 @@ const OwnerSetupScreen = () => {
   const modalRef = useRef(null);
   const navigation = useNavigation();
   const { userProfile, userRole } = useAuthStore();
+  const isNormalAdmin = userRole === "admin" && !userProfile?.isSuperAdmin;
 
   const [hidePassword, setHidePassword] = useState(true);
   const [hidePassword1, setHidePassword1] = useState(true);
@@ -146,6 +145,13 @@ const OwnerSetupScreen = () => {
       }
     },
   });
+
+  useEffect(() => {
+    if (isNormalAdmin && userProfile) {
+      formik.setFieldValue("country", userProfile.countryID);
+      formik.setFieldValue("locationID", userProfile.locationID);
+    }
+  }, [isNormalAdmin, userProfile]);
 
   const filteredLocations = useMemo(() => {
     if (!formik.values.country || !allLocations) {
@@ -364,6 +370,7 @@ const OwnerSetupScreen = () => {
                 inputSearchStyle={styles.inputSearchStyle}
                 iconStyle={styles.iconStyle}
                 data={countries ?? []}
+                disable={isNormalAdmin}
                 search
                 maxHeight={300}
                 labelField="countryName"
@@ -391,6 +398,7 @@ const OwnerSetupScreen = () => {
                 ]}
                 placeholderStyle={styles.placeholderStyle}
                 selectedTextStyle={styles.selectedTextStyle}
+                disable={isNormalAdmin}
                 data={filteredLocations ?? []}
                 maxHeight={300}
                 labelField="locationName"
@@ -411,32 +419,15 @@ const OwnerSetupScreen = () => {
                 <Text style={styles.errorText}>{formik.errors.locationID}</Text>
               )}
 
-              <Text style={styles.termsText}>
-                By signing up, you agree to our{" "}
-                <Text style={styles.link}>Terms of Service</Text> and{" "}
-                <Text style={styles.link}>Privacy Policy</Text>
-              </Text>
-
               <TouchableOpacity
-                style={[
-                  styles.button,
-                  //  (!formik.isValid || isSignupLoading) && styles.buttonDisabled
-                ]}
+                style={[styles.button]}
                 onPress={formik.handleSubmit}
                 activeOpacity={0.8}
-                //   disabled={!formik.isValid || isSignupLoading}
               >
                 <Text style={styles.buttonText}>
                   {isSignupLoading ? "Creating Account..." : "Create Account"}
                 </Text>
               </TouchableOpacity>
-
-              <View style={styles.loginPrompt}>
-                <Text style={styles.loginText}>Already have an account? </Text>
-                <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-                  <Text style={styles.loginLink}>Log in</Text>
-                </TouchableOpacity>
-              </View>
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
@@ -644,17 +635,17 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   button: {
-    backgroundColor: "#4267B2",
+    backgroundColor: colors.brand.primary,
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 16,
-    shadowColor: "#4267B2",
+    marginTop: 32,
+    shadowColor: colors.brand.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 5,
   },
   buttonDisabled: {
     backgroundColor: "#ADB5BD",
