@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../apiClient";
 import { UserProfile } from "../../zustand/useAuthStore";
 
@@ -20,10 +20,16 @@ export interface Owner {
   countryID: number;
   locationID: number;
   profilepic: string | null;
+  status: "Active" | "In-active";
 }
 
 export interface ResetOwnerPasswordPayload {
   ownerID: number;
+}
+
+export interface ToggleOwnerStatusPayload {
+  ownerID: number;
+  isEnable: boolean;
 }
 
 export const useGetAllOwners = (userProfile?: UserProfile | null) => {
@@ -66,6 +72,17 @@ export const useEditOwner = () => {
 
 export const useResetOwnerPassword = () => {
   return useMutation<any, Error, ResetOwnerPasswordPayload>({
-    mutationFn: (data) => api.post("api/Admin/OwnerPasswordReset", data), // IMPORTANT: Replace endpoint
+    mutationFn: (data) => api.post("api/Admin/OwnerPasswordReset", data),
+  });
+};
+
+export const useToggleOwnerStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, ToggleOwnerStatusPayload>({
+    mutationFn: (data) => api.post("api/Admin/EnableDisableOwners", data),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["allOwners"] });
+    },
   });
 };

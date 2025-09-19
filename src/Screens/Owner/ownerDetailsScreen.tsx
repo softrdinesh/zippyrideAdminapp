@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -9,16 +9,22 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Switch,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
-import { Owner, useResetOwnerPassword } from "../../services/api/admin-owner";
+import {
+  Owner,
+  useResetOwnerPassword,
+  useToggleOwnerStatus,
+} from "../../services/api/admin-owner";
 import { TelegramIcon } from "../../icons/SvgTelegramIcon";
 import { PhoneIcon } from "../../icons/SvgPhoneIcon";
 import { KeyIcon } from "../../icons/SvgKeyIcon";
 import { AddressIcon } from "../../icons/SvgAddressIcon";
+import { useAuthStore } from "../../zustand/useAuthStore";
 
 const InfoCard = ({
   title,
@@ -57,7 +63,8 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
   // The full owner object is passed from the list screen
   const { owner }: { owner: Owner } = route.params;
 
-  // For now, we'll use a detailed mock object to ensure all fields are represented
+  const [isActive, setIsActive] = useState(owner.status === "Active");
+
   const ownerDetails = {
     ownerID: owner?.ownerID || 1,
     username: owner?.ownerUsername || "",
@@ -74,6 +81,44 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
   };
 
   const resetPasswordMutation = useResetOwnerPassword();
+  const toggleStatusMutation = useToggleOwnerStatus();
+
+  const navigateToOwnerModule = (screenName: string) => {
+    setManagedOwner(owner);
+    navigation.navigate(screenName);
+  };
+
+  const handleToggleStatus = (newValue: boolean) => {
+    const action = newValue ? "enable" : "disable";
+    Alert.alert(
+      `${action.charAt(0).toUpperCase() + action.slice(1)} Owner`,
+      `Are you sure you want to ${action} ${owner.ownerUsername}?`,
+      [
+        { text: "Cancel", style: "cancel", onPress: () => {} },
+        {
+          text: `Yes, ${action.charAt(0).toUpperCase() + action.slice(1)}`,
+          style: "destructive",
+          onPress: async () => {
+            setIsActive(newValue);
+            try {
+              await toggleStatusMutation.mutateAsync({
+                ownerID: owner.ownerID,
+                isEnable: newValue,
+              });
+              Toast.show({
+                type: "success",
+                text1: "Success",
+                text2: `Owner has been ${action}d.`,
+              });
+            } catch (e) {
+              setIsActive(!newValue);
+              console.error("Failed to toggle owner status:", e);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const handleResetPassword = () => {
     Alert.alert(
@@ -87,7 +132,7 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
           onPress: async () => {
             try {
               await resetPasswordMutation.mutateAsync({
-                ownerID: ownerDetails.ownerID,
+                ownerID: owner.ownerID,
               });
               Toast.show({
                 type: "success",
@@ -270,6 +315,23 @@ const styles = StyleSheet.create({
   },
   resetButtonText: {
     color: colors.status.error,
+  },
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 12,
+    backgroundColor: colors.gray[100],
+    borderRadius: 8,
+  },
+  actionTextContainer: {
+    flex: 1,
+  },
+  actionSubText: {
+    ...TYPOGRAPHY.caption,
+    color: colors.gray[400],
+    marginLeft: 12,
+    marginTop: 2,
   },
 });
 
