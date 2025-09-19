@@ -21,9 +21,9 @@ const OwnerCard = ({ item, onPress }: { item: Owner; onPress: () => void }) => (
       source={{
         uri:
           item.profilepic ||
-          `https://placehold.co/100x100/png?font=poppins&text=${item.ownerUsername.charAt(
-            0
-          )}`,
+          `https://placehold.co/100x100/png?font=poppins&text=${item.ownerUsername
+            .charAt(0)
+            .toUpperCase()}`,
       }}
       style={styles.avatar}
     />

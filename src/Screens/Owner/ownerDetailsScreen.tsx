@@ -55,22 +55,22 @@ const DetailRowWithIcon = ({
 const OwnerDetailsScreen: React.FC = ({ route }: any) => {
   const navigation = useNavigation();
   // The full owner object is passed from the list screen
-  const { ownerDetails }: { ownerDetails: Owner } = route.params;
+  const { owner }: { owner: Owner } = route.params;
 
   // For now, we'll use a detailed mock object to ensure all fields are represented
-  const owner = {
-    ownerID: ownerDetails?.ownerID || 1,
-    username: ownerDetails?.username || "Kevin Macwan",
-    companyname: ownerDetails?.companyname || "ZippyRide Solutions",
-    mobileno: ownerDetails?.mobileno || "+91 98765 43210",
-    whatsappno: ownerDetails?.whatsappno || "+91 98765 43210",
-    address: ownerDetails?.address || "123 Tech Park, Silicon Valley, India",
-    countryName: "India", // Assuming you'd join this data
-    locationName: "Chennai", // Assuming you'd join this data
-    telegarmid: "kevin_zippy",
+  const ownerDetails = {
+    ownerID: owner?.ownerID || 1,
+    username: owner?.ownerUsername || "",
+    companyname: owner?.companyname || "",
+    mobileno: owner?.mobileno || "",
+    whatsappno: owner?.whatsappno || "",
+    address: owner?.address || "",
+    countryName: "",
+    locationName: "",
+    telegarmid: "",
     profilepic:
-      ownerDetails?.profilepic ||
-      "https://placehold.co/200x200/png?font=poppins&text=KM",
+      owner?.profilepic ||
+      `https://placehold.co/200x200/png?font=poppins&text=${owner?.ownerUsername[0].toUpperCase()}`,
   };
 
   const resetPasswordMutation = useResetOwnerPassword();
@@ -78,7 +78,7 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
   const handleResetPassword = () => {
     Alert.alert(
       "Reset Password",
-      `Are you sure you want to reset the password for ${owner.username}?`,
+      `Are you sure you want to reset the password for ${ownerDetails.username}?`,
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -87,7 +87,7 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
           onPress: async () => {
             try {
               await resetPasswordMutation.mutateAsync({
-                ownerID: owner.ownerID,
+                ownerID: ownerDetails.ownerID,
               });
               Toast.show({
                 type: "success",
@@ -108,9 +108,12 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
       <ScrollView contentContainerStyle={styles.contentContainer}>
         {/* Main Profile Section */}
         <View style={styles.profileSection}>
-          <Image source={{ uri: owner.profilepic }} style={styles.avatar} />
-          <Text style={styles.ownerName}>{owner.username}</Text>
-          <Text style={styles.companyName}>{owner.companyname}</Text>
+          <Image
+            source={{ uri: ownerDetails.profilepic }}
+            style={styles.avatar}
+          />
+          <Text style={styles.ownerName}>{ownerDetails.username}</Text>
+          <Text style={styles.companyName}>{ownerDetails.companyname}</Text>
         </View>
 
         {/* Contact Info Card */}
@@ -118,22 +121,22 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
           <DetailRowWithIcon
             Icon={<PhoneIcon />}
             label="Mobile"
-            value={owner.mobileno}
+            value={ownerDetails.mobileno}
           />
           <DetailRowWithIcon
             Icon={<PhoneIcon color={colors.status.success} />}
             label="WhatsApp"
-            value={owner.whatsappno}
+            value={ownerDetails.whatsappno}
           />
           <DetailRowWithIcon
             Icon={<TelegramIcon />}
             label="Telegram"
-            value={owner.telegarmid}
+            value={ownerDetails.telegarmid}
           />
           <DetailRowWithIcon
             Icon={<AddressIcon />}
             label="Address"
-            value={owner.address}
+            value={ownerDetails.address}
           />
         </InfoCard>
 
@@ -142,12 +145,12 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
           <DetailRowWithIcon
             Icon={<AddressIcon />}
             label="Country"
-            value={owner.countryName}
+            value={ownerDetails.countryName}
           />
           <DetailRowWithIcon
             Icon={<AddressIcon />}
             label="City / Location"
-            value={owner.locationName}
+            value={ownerDetails.locationName}
           />
         </InfoCard>
 

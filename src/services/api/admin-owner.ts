@@ -15,6 +15,7 @@ export interface Owner {
   ownerUsername: string;
   companyname: string;
   mobileno: string;
+  whatsappno: string;
   address: string;
   countryID: number;
   locationID: number;
