@@ -17,7 +17,7 @@ const DebugNetworkLogger: React.FC = () => {
 
   return (
     <Modal
-      visible={!isLoggerVisible}
+      visible={isLoggerVisible}
       onRequestClose={toggleLogger}
       animationType="slide"
     >
