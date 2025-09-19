@@ -4,7 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 
 import OwnerListScreen from "../Screens/Owner/ownerListScreen";
 import OwnerDetailScreen from "../Screens/Owner/ownerDetailsScreen";
-// import OwnerSetupScreen from "../Screens/Owner/ownerSetupScreen";
+import OwnerSetupScreen from "../Screens/Owner/ownerSetupScreen";
 import { CustomHeader } from "../uikit/CustomDrawerHeader";
 import { colors } from "../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../theme/typography";
@@ -64,13 +64,13 @@ export const OwnerNavigator = () => {
         })}
         component={OwnerDetailScreen}
       />
-      {/* <Stack.Screen
+      <Stack.Screen
         name="OwnerSetupScreen"
         options={({ route }) => ({
           title: route.params?.ownerId ? "Edit Owner" : "Add Owner",
         })}
         component={OwnerSetupScreen}
-      /> */}
+      />
     </Stack.Navigator>
   );
 };
