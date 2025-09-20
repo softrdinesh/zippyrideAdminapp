@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { mmkvStorageAdapter } from "../utils/mmkvStorage";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { Owner } from "../services/api";
 
 export interface UserProfile {
   id: number;
@@ -21,10 +22,21 @@ interface AuthState {
   userProfile: UserProfile | null;
   userRole: "owner" | "admin" | null;
   token: string | null;
+  managedOwnerProfile: Owner | null;
   loginUser: (profile: UserProfile, role: "owner" | "admin") => void;
   logoutUser: () => void;
   setIsVehicleTag: (value: boolean) => void;
+  setManagedOwner: (owner: Owner | null) => void;
 }
+
+export const useActiveOwnerId = () => {
+  const { userRole, userProfile, managedOwnerProfile } = useAuthStore();
+  if (userRole === "owner") {
+    return userProfile?.id;
+  }
+
+  return managedOwnerProfile?.ownerID;
+};
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -34,6 +46,7 @@ export const useAuthStore = create<AuthState>()(
       userProfile: null,
       userRole: null,
       token: null,
+      managedOwnerProfile: null,
 
       loginUser: (profile, role) => {
         set({
@@ -56,6 +69,9 @@ export const useAuthStore = create<AuthState>()(
 
       setIsVehicleTag: (value) => {
         set({ isVehicleTag: value });
+      },
+      setManagedOwner: (owner) => {
+        set({ managedOwnerProfile: owner });
       },
     }),
     {

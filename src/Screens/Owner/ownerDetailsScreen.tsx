@@ -60,7 +60,7 @@ const DetailRowWithIcon = ({
 // --- Main Screen Component ---
 const OwnerDetailsScreen: React.FC = ({ route }: any) => {
   const navigation = useNavigation();
-  // The full owner object is passed from the list screen
+  const { setManagedOwner } = useAuthStore();
   const { owner }: { owner: Owner } = route.params;
 
   const [isActive, setIsActive] = useState(owner.status === "Active");
@@ -199,6 +199,26 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
           />
         </InfoCard>
 
+        <InfoCard title="Owner Modules">
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => navigateToOwnerModule("VehicleManagement")}
+          >
+            <Text style={styles.actionButtonText}>View Vehicles</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => navigateToOwnerModule("DriverManagement")}
+          >
+            <Text style={styles.actionButtonText}>View Drivers</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => navigateToOwnerModule("TripManagement")}
+          >
+            <Text style={styles.actionButtonText}>View Trips</Text>
+          </TouchableOpacity>
+        </InfoCard>
         {/* Account Actions Card */}
         <InfoCard title="Account Actions">
           <View style={styles.actionRow}>
