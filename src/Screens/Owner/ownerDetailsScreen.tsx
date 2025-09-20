@@ -201,6 +201,29 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
 
         {/* Account Actions Card */}
         <InfoCard title="Account Actions">
+          <View style={styles.actionRow}>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionButtonText}>Owner Status</Text>
+              <Text style={styles.actionSubText}>
+                {isActive ? "Active" : "Inactive"}
+              </Text>
+            </View>
+            {toggleStatusMutation.isPending ? (
+              <ActivityIndicator color={colors.brand.primary} />
+            ) : (
+              <Switch
+                trackColor={{
+                  false: colors.gray[200],
+                  true: colors.status.success + "40",
+                }}
+                thumbColor={isActive ? colors.status.success : colors.gray[300]}
+                ios_backgroundColor={colors.gray[200]}
+                onValueChange={handleToggleStatus}
+                value={isActive}
+              />
+            )}
+          </View>
+
           <TouchableOpacity
             style={[styles.actionButton]}
             onPress={handleResetPassword}
