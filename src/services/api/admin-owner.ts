@@ -8,6 +8,18 @@ export interface OwnerListItem {
   companyname: string;
   locationID: number;
   countryID: number;
+  status: "Active" | "In-active";
+  profilepic: string | null;
+  address: string;
+  mobileno: string;
+  whatsappno: string | null;
+  ownername: string;
+  noofVehiclesAttached: number;
+  telegramid: string | null;
+  isPaymentPending: boolean;
+  amount: number;
+  lastpaymentDate: string;
+  nextpaymentTime: string;
 }
 
 export interface Owner {

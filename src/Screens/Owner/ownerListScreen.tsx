@@ -12,38 +12,73 @@ import {
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
-import { useGetAllOwners, Owner } from "../../services/api/admin-owner";
+import { useGetAllOwners, OwnerListItem } from "../../services/api/admin-owner";
 import { useAuthStore } from "../../zustand/useAuthStore";
+import { WarningIcon } from "../../icons/WarningIcon";
 
-const OwnerCard = ({ item, onPress }: { item: Owner; onPress: () => void }) => {
+const OwnerCard = ({
+  item,
+  onPress,
+}: {
+  item: OwnerListItem;
+  onPress: () => void;
+}) => {
+  const isPaymentDue = item.isPaymentPending;
+
   const statusStyle =
     item.status === "Active" ? styles.statusActive : styles.statusInactive;
 
   return (
-  <TouchableOpacity style={styles.card} onPress={onPress}>
-    <Image
-      source={{
-        uri:
-          item.profilepic ||
-          `https://placehold.co/100x100/png?font=poppins&text=${item.ownerUsername
-            .charAt(0)
-            .toUpperCase()}`,
-      }}
-      style={styles.avatar}
-    />
-    <View style={styles.cardDetails}>
-      <Text style={styles.ownerName}>{item.ownerUsername}</Text>
-      <Text style={styles.companyName}>{item.companyname}</Text>
-
-        <View style={[styles.statusBadge, statusStyle.container]}>
-          <Text style={[styles.statusText, statusStyle.text]}>
-            {item.status}
+    <TouchableOpacity style={styles.card} onPress={onPress}>
+      <Image
+        source={{
+          uri:
+            item.profilepic ||
+            `https://placehold.co/100x100/E9ECEF/343A40?text=${item.ownerUsername.charAt(
+              0
+            )}`,
+        }}
+        style={styles.avatar}
+      />
+      <View style={styles.cardDetails}>
+        <View style={styles.nameRow}>
+          <Text style={styles.ownerName} numberOfLines={1}>
+            {item.ownerUsername}
           </Text>
+          <View style={[styles.statusBadge, statusStyle.container]}>
+            <Text style={[styles.statusText, statusStyle.text]}>
+              {item.status}
+            </Text>
+          </View>
         </View>
-    </View>
-    <Text style={styles.arrowIcon}>›</Text>
-  </TouchableOpacity>
-);
+        <Text style={styles.companyName}>{item.companyname}</Text>
+
+        {isPaymentDue && (
+          <View style={styles.paymentInfoContainer}>
+            <Text style={styles.paymentText}>
+              Last Paid:{" "}
+              <Text style={styles.paymentDate}>{item.lastpaymentDate}</Text>
+            </Text>
+
+            <View style={styles.dueRow}>
+              {isPaymentDue && <WarningIcon />}
+              <Text
+                style={[
+                  styles.paymentText,
+                  isPaymentDue && styles.paymentTextDue,
+                ]}
+              >
+                Next Due:{" "}
+                <Text style={styles.paymentDate}>{item.nextpaymentTime}</Text> •
+                ₹{item.amount.toFixed(2)}
+              </Text>
+            </View>
+          </View>
+        )}
+      </View>
+      <Text style={styles.arrowIcon}>›</Text>
+    </TouchableOpacity>
+  );
 };
 
 const OwnerListScreen = ({}) => {
@@ -141,6 +176,13 @@ const styles = StyleSheet.create({
   },
   cardDetails: {
     flex: 1,
+    paddingRight: 8,
+  },
+  nameRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
   },
   ownerName: {
     ...TYPOGRAPHY.title,
@@ -177,6 +219,29 @@ const styles = StyleSheet.create({
   statusInactive: {
     container: { backgroundColor: colors.status.error + "20" },
     text: { color: colors.status.error },
+  },
+  paymentInfoContainer: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray[100],
+  },
+  paymentText: {
+    ...TYPOGRAPHY.caption,
+    color: colors.gray[500],
+  },
+  paymentDate: {
+    fontWeight: "bold",
+  },
+  paymentTextDue: {
+    color: colors.status.error, // Highlight in red when payment is due
+    fontWeight: "bold",
+  },
+  dueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 4,
+    gap: 6, // Creates space between icon and text
   },
   loaderContainer: {
     flex: 1,
