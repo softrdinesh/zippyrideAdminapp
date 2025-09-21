@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   Switch,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
@@ -70,8 +70,9 @@ const DetailRowWithIcon = ({
 );
 
 // --- Main Screen Component ---
-const OwnerDetailsScreen: React.FC = ({ route }: any) => {
+const OwnerDetailsScreen: React.FC = () => {
   const navigation = useNavigation();
+  const route = useRoute();
   const { setManagedOwner } = useAuthStore();
   const { owner }: { owner: OwnerListItem } = route.params;
   console.log("owner", owner);
@@ -133,6 +134,9 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
               await toggleStatusMutation.mutateAsync({
                 ownerID: owner.ownerID,
                 isEnable: newValue,
+              });
+              navigation.setParams({
+                owner: { ...owner, status: newValue ? "Active" : "In-active" },
               });
               Toast.show({
                 type: "success",
