@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { mmkvStorageAdapter } from "../utils/mmkvStorage";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { Owner } from "../services/api";
+import { OwnerListItem } from "../services/api";
 
 export interface UserProfile {
   id: number;
@@ -22,7 +22,7 @@ interface AuthState {
   userProfile: UserProfile | null;
   userRole: "owner" | "admin" | null;
   token: string | null;
-  managedOwnerProfile: Owner | null;
+  managedOwnerProfile: OwnerListItem | null;
   loginUser: (profile: UserProfile, role: "owner" | "admin") => void;
   logoutUser: () => void;
   setIsVehicleTag: (value: boolean) => void;

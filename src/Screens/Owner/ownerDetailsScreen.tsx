@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   View,
   StyleSheet,
@@ -16,10 +16,12 @@ import Toast from "react-native-toast-message";
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
 import {
-  Owner,
+  OwnerListItem,
   useResetOwnerPassword,
   useToggleOwnerStatus,
-} from "../../services/api/admin-owner";
+  useGetCountries,
+  useGetLocations,
+} from "../../services/api";
 import { TelegramIcon } from "../../icons/SvgTelegramIcon";
 import { PhoneIcon } from "../../icons/SvgPhoneIcon";
 import { KeyIcon } from "../../icons/SvgKeyIcon";
@@ -43,16 +45,26 @@ const DetailRowWithIcon = ({
   Icon,
   label,
   value,
+  isLoading = false,
 }: {
   Icon: JSX.Element;
   label: string;
   value?: string | null;
+  isLoading?: boolean;
 }) => (
   <View style={styles.detailRow}>
     <View style={styles.iconWrapper}>{Icon}</View>
     <View style={styles.textWrapper}>
       <Text style={styles.detailLabel}>{label}</Text>
-      <Text style={styles.detailValue}>{value || "N/A"}</Text>
+      {isLoading ? (
+        <ActivityIndicator
+          size="small"
+          color={colors.brand.primary}
+          style={styles.loader}
+        />
+      ) : (
+        <Text style={styles.detailValue}>{value || "N/A"}</Text>
+      )}
     </View>
   </View>
 );
@@ -61,9 +73,26 @@ const DetailRowWithIcon = ({
 const OwnerDetailsScreen: React.FC = ({ route }: any) => {
   const navigation = useNavigation();
   const { setManagedOwner } = useAuthStore();
-  const { owner }: { owner: Owner } = route.params;
+  const { owner }: { owner: OwnerListItem } = route.params;
+  console.log("owner", owner);
 
   const [isActive, setIsActive] = useState(owner.status === "Active");
+
+  const { data: countries, isLoading: isLoadingCountries } = useGetCountries();
+  const { data: allLocations, isLoading: isLoadingLocations } =
+    useGetLocations();
+
+  const countryName = useMemo(
+    () => countries?.find((c) => c.countryID === owner.countryID)?.countryName,
+    [countries, owner.countryID]
+  );
+
+  const locationName = useMemo(
+    () =>
+      allLocations?.find((l) => l.locationID === owner.locationID)
+        ?.locationName,
+    [allLocations, owner.locationID]
+  );
 
   const ownerDetails = {
     ownerID: owner?.ownerID || 1,
@@ -74,7 +103,7 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
     address: owner?.address || "",
     countryName: "",
     locationName: "",
-    telegarmid: "",
+    telegarmid: owner.telegramid || "",
     profilepic:
       owner?.profilepic ||
       `https://placehold.co/200x200/png?font=poppins&text=${owner?.ownerUsername[0].toUpperCase()}`,
@@ -190,12 +219,14 @@ const OwnerDetailsScreen: React.FC = ({ route }: any) => {
           <DetailRowWithIcon
             Icon={<AddressIcon />}
             label="Country"
-            value={ownerDetails.countryName}
+            value={countryName}
+            isLoading={isLoadingCountries}
           />
           <DetailRowWithIcon
             Icon={<AddressIcon />}
             label="City / Location"
-            value={ownerDetails.locationName}
+            value={locationName}
+            isLoading={isLoadingLocations}
           />
         </InfoCard>
 

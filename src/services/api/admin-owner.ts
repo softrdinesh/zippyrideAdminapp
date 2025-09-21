@@ -22,19 +22,6 @@ export interface OwnerListItem {
   nextpaymentTime: string;
 }
 
-export interface Owner {
-  ownerID: number;
-  ownerUsername: string;
-  companyname: string;
-  mobileno: string;
-  whatsappno: string;
-  address: string;
-  countryID: number;
-  locationID: number;
-  profilepic: string | null;
-  status: "Active" | "In-active";
-}
-
 export interface ResetOwnerPasswordPayload {
   ownerID: number;
 }
@@ -67,18 +54,17 @@ export const useGetAllOwners = (userProfile?: UserProfile | null) => {
 };
 
 export const useGetOwnerById = (ownerId?: number) => {
-  return useQuery<Owner, Error>({
+  return useQuery<OwnerListItem, Error>({
     queryKey: ["owner", ownerId],
-    queryFn: () => api.get(`api/Admin/GetOwnerById?ownerId=${ownerId}`), // IMPORTANT: Replace endpoint
+    queryFn: () => api.get(`api/Admin/GetOwnerById?ownerId=${ownerId}`),
     enabled: !!ownerId,
   });
 };
 
 export const useEditOwner = () => {
   return useMutation({
-    // Using any for response as it might vary
     mutationFn: (formData: FormData) =>
-      api.putFormData("api/Admin/UpdateOwnerInfo", formData), // IMPORTANT: Replace endpoint
+      api.putFormData("api/Admin/UpdateOwnerInfo", formData),
   });
 };
 
