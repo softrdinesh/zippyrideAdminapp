@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../apiClient";
+import { useAuthStore } from "../../zustand/useAuthStore";
 
 interface VehicleColor {
   colourId: number;
@@ -18,26 +19,18 @@ interface VehicleType {
   vehicleInfo: Array<any>;
 }
 
-interface VehicleSetupPayload {
-  Chasisno: string;
-  Others: string;
-  EngineNo: string;
-  VehName: string;
-  VehcolorId: number;
-  IsHybrid: boolean;
-  CreateDate: string;
-  VehPicFile: any;
-  IsPetrolVech: boolean;
-  VehTypeId: number;
-  OwnerId: number;
-  IsCngenabled: boolean;
-  VehPic: string;
-  UpdateDate: string;
-  Vehno: string;
-  IsEv: boolean;
-  IsDesielvech: boolean;
-  FcexpiryDate: string;
+export interface VehicleListItem {
+  vehicleID: number;
+  vehiclename: string;
+  vehicleno: string;
+  status: "Active" | "In-active";
+  vehiclepic: string | null;
+  isActive: boolean;
+  chassisno?: string;
+  vehicleTypeInfo: string;
+  engineno?: string;
 }
+
 interface Vehicle {
   Chasisno: string;
   Others: string;
@@ -92,11 +85,33 @@ export const useEditVehicle = () => {
   });
 };
 
-export const useGetVehiclesByOwnerId = (ownerId: number | undefined) => {
-  return useQuery<Vehicle[]>({
-    queryKey: ["vehicles", ownerId],
-    queryFn: () =>
-      api.get(`api/Vehicles/GetVehicleListByOwnerID?OwnerID=${ownerId}`),
+export const useGetVehiclesByOwnerId = (ownerId?: number) => {
+  const { userRole } = useAuthStore.getState();
+
+  return useQuery<VehicleListItem[], Error>({
+    queryKey: ["vehicles", ownerId, userRole],
+    queryFn: async () => {
+      if (!ownerId) return [];
+
+      let url: string;
+      if (userRole === "admin") {
+        url = `api/Admin/GetVehicleListbyOwner?OwnerID=${ownerId}`;
+      } else {
+        url = `api/Vehicles/GetVehicleListByOwnerID?OwnerID=${ownerId}`;
+      }
+
+      const response = await api.get<any[]>(url);
+
+      return response.map((item) => ({
+        vehID: item.vehicleID || item.vehID,
+        vehName: item.vehiclename || item.vehName,
+        vehno: item.vehicleno || item.vehno,
+        vehiclePicture:
+          item.vehiclepic || item.vehiclePicture || item.VehPicFile,
+        status: item.status || (item.isActive ? "Active" : "In-active"),
+        vehicleTypeInfo: item.vehicleTypeInfo,
+      }));
+    },
     enabled: !!ownerId,
   });
 };
@@ -106,7 +121,7 @@ export const useGetVehicleById = (vehicleId) => {
     queryKey: ["vehicle", vehicleId],
     queryFn: () =>
       api.get(`api/Vehicles/GetSpecificVehicleDetails/${vehicleId}`),
-    enabled: !!vehicleId, // The query will not run until vehicleId is available
+    enabled: !!vehicleId,
   });
 };
 

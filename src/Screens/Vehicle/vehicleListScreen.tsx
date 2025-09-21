@@ -8,15 +8,29 @@ import {
   Image,
   SafeAreaView,
 } from "react-native";
-import { useGetVehiclesByOwnerId } from "../../services/api";
+import { useGetVehiclesByOwnerId, VehicleListItem } from "../../services/api";
 import { useActiveOwnerId } from "../../zustand/useAuthStore";
 import SvgCarIcon from "../../icons/SvgCarIcon";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Loader from "../../uikit/Loader/Loader";
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
+
 // Reusable component for each vehicle card in the list
-const VehicleCard = ({ vehicle, onPress }) => {
+const VehicleCard = ({
+  vehicle,
+  onPress,
+}: {
+  vehicle: VehicleListItem;
+  onPress: () => void;
+}) => {
+  const isOwnerView = vehicle.vehicleTypeInfo !== undefined;
+
+  const statusText = isOwnerView ? vehicle.vehicleTypeInfo : vehicle.status;
+
+  const statusStyle =
+    vehicle.status === "Active" ? styles.statusActive : styles.statusInactive;
+
   return (
     <TouchableOpacity style={styles.itemCard} onPress={onPress}>
       <View style={styles.cardContent}>
@@ -34,8 +48,10 @@ const VehicleCard = ({ vehicle, onPress }) => {
         <View style={styles.cardDetails}>
           <Text style={styles.cardVehName}>{vehicle.vehName}</Text>
           <Text style={styles.cardVehNo}>{vehicle.vehno}</Text>
-          <View style={styles.chip}>
-            <Text style={styles.chipText}>{vehicle.vehicleTypeInfo}</Text>
+          <View style={[styles.chip, !isOwnerView && statusStyle.container]}>
+            <Text style={[styles.chipText, !isOwnerView && statusStyle.text]}>
+              {statusText}
+            </Text>
           </View>
         </View>
       </View>
@@ -147,7 +163,6 @@ const styles = StyleSheet.create({
   cardVehNo: {
     ...TYPOGRAPHY.body,
     color: colors.gray[400],
-    // marginTop: 4,
   },
   chip: {
     backgroundColor: colors.brand.primary + "20",
@@ -160,6 +175,14 @@ const styles = StyleSheet.create({
   chipText: {
     ...TYPOGRAPHY.caption,
     color: colors.brand.primary,
+  },
+  statusActive: {
+    container: { backgroundColor: colors.status.success + "20" },
+    text: { color: colors.status.success },
+  },
+  statusInactive: {
+    container: { backgroundColor: colors.status.error + "20" },
+    text: { color: colors.status.error },
   },
   emptyContainer: {
     flex: 1,
