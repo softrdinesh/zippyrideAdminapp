@@ -16,14 +16,17 @@ import InputText from "../../uikit/InputText/InputText";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Dropdown } from "react-native-element-dropdown";
 import { StyleSheet } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 import { useFormik } from "formik";
 import * as Yup from "yup";
+
 import {
   useSignup,
   useGetCountries,
   useGetLocations,
+  useEditOwner,
+  OwnerListItem,
 } from "../../services/api";
 
 import PhoneInputText from "../../uikit/PhoneInputText/PhoneInputText";
@@ -38,10 +41,14 @@ import { useAuthStore } from "../../zustand/useAuthStore";
 import { colors } from "../../uikit/UikitUtils/colors";
 
 const OwnerSetupScreen = () => {
-  const phoneInput = useRef(null);
-  const useridref = useRef(null);
   const modalRef = useRef(null);
+  const mobileInputRef = useRef();
+  const whatsappInputRef = useRef();
   const navigation = useNavigation();
+  const route = useRoute();
+  const { owner }: { owner: OwnerListItem } = route.params || {};
+
+  const isEdit = !!owner;
   const { userProfile, userRole } = useAuthStore();
   const isNormalAdmin = userRole === "admin" && !userProfile?.isSuperAdmin;
 
@@ -58,19 +65,28 @@ const OwnerSetupScreen = () => {
     useGetLocations();
   const { mutateAsync: signupMutation, isPending: isSignupLoading } =
     useSignup();
+  const { mutateAsync: editMutation, isPending: isOwnerInfoUpdating } =
+    useEditOwner();
+
   const isLoading = isSignupLoading || isLoadingCountries || isLoadingLocations;
 
   const SignUpSchema = Yup.object().shape({
     username: Yup.string().required("Name is required"),
     companyname: Yup.string().required("Company name is required"),
     telegarmid: Yup.string(),
-    password: Yup.string()
-      .min(8, "Password must be at least 8 characters")
-      .max(15, "Password Max is 15 characters")
-      .required("Password is required"),
-    confirmPassword: Yup.string()
-      .oneOf([Yup.ref("password"), null], "Passwords must match")
-      .required("Confirm Password is required"),
+    password: isEdit
+      ? Yup.string()
+          .min(8, "Password must be at least 8 characters")
+          .max(15, "Password Max is 15 characters")
+      : Yup.string()
+          .min(8, "Password must be at least 8 characters")
+          .max(15, "Password Max is 15 characters")
+          .required("Password is required"),
+    confirmPassword: isEdit
+      ? Yup.string().oneOf([Yup.ref("password")], "Passwords must match")
+      : Yup.string()
+          .oneOf([Yup.ref("password"), null], "Passwords must match")
+          .required("Confirm Password is required"),
     mobileno: Yup.string().required("Mobile Number is required"),
     whatsappno: Yup.string(),
     address: Yup.string().required("Address is required"),
@@ -97,13 +113,19 @@ const OwnerSetupScreen = () => {
     onSubmit: async (values) => {
       try {
         const formdata = new FormData();
+        // Note: The keys in FormData must match the API's expected parameter names
+        //   -F 'OwnerUsername=string' \
+        //   -F 'LoginUserID=0' \
+        //   -F 'TelegramID=string' \
+        //   -F 'Ownername=string'
+
         formdata.append("Mobileno", values.mobileno);
         formdata.append("Companyname", values.companyname);
         formdata.append("CountryID", values.country);
         formdata.append("LocationID", values.locationID);
         formdata.append("Whatsappno", values.whatsappno);
 
-        if (values.profilepick) {
+        if (values.profilepick.startsWith("file://")) {
           const imageName = values.profilepick.split("/").pop();
           const ext = imageName.split(".").pop();
           const imageType = ext ? `image/${ext}` : "image";
@@ -113,30 +135,51 @@ const OwnerSetupScreen = () => {
             type: imageType,
           });
         }
+        if (isEdit) {
+          formdata.append("Ownername", values.username);
+          formdata.append("OwnerUsername", values.username);
+          formdata.append("TelegramID", values.telegarmid);
+        } else {
+          formdata.append("Username", values.username);
+          formdata.append("Telegarmid", values.telegarmid);
+        }
         formdata.append("Address", values.address);
-        formdata.append("Username", values.username);
-        formdata.append("Telegarmid", values.telegarmid);
-        formdata.append("Password", values.password);
+        if (values.password) {
+          formdata.append("Password", values.password);
+        }
         console.log("Form data:", formdata);
 
-        const response = await signupMutation(formdata);
+        let response;
 
-        if (response && response.ownerID) {
-          useridref.current = response.ownerID;
+        if (isEdit) {
+          formdata.append("OwnerID", owner.ownerID);
+          formdata.append(
+            "IsActive",
+            owner.status === "Active" ? "true" : "false"
+          );
+          response = await editMutation(formdata);
+        } else {
+          response = await signupMutation(formdata);
+        }
+
+        if (response?.ownerID || response?.code === 5999) {
           setShowInfoModal({
             isOpen: true,
-            message: "Owner account created successfully",
+            message:
+              response?.message ||
+              `Owner ${isEdit ? "updated" : "created"} successfully!`,
             type: "success",
           });
         } else {
           setShowInfoModal({
             isOpen: true,
-            message: response?.message || "Owner account creation failed",
+            message:
+              response?.message || "An error occurred. Please try again.",
             type: "error",
           });
         }
       } catch (error) {
-        console.log("Signup failed:", error);
+        console.log(`Owner ${isEdit ? "Edit" : "Create"}  failed:`, error);
         setShowInfoModal({
           isOpen: true,
           message: error?.message || "Something went wrong",
@@ -146,6 +189,37 @@ const OwnerSetupScreen = () => {
     },
   });
 
+  useEffect(() => {
+    if (isEdit && owner) {
+      console.log("Editing owner:", owner);
+
+      formik.setValues({
+        username: owner.ownerUsername || "",
+        companyname: owner.companyname || "",
+        mobileno: owner.mobileno || "",
+        whatsappno: owner.whatsappno || "",
+        address: owner.address || "",
+        country: owner.countryID || "",
+        locationID: owner.locationID || "",
+        telegarmid: owner.telegramid || "",
+        profilepick: owner.profilepic || "",
+        password: "",
+        confirmPassword: "",
+      });
+      if (mobileInputRef.current) {
+        mobileInputRef.current.setState({
+          ...mobileInputRef.current.state,
+          number: owner.mobileno.replace("+91", ""),
+        });
+      }
+      if (whatsappInputRef.current) {
+        whatsappInputRef.current.setState({
+          ...whatsappInputRef.current.state,
+          number: owner?.whatsappno.replace("+91", ""),
+        });
+      }
+    }
+  }, [isEdit, owner]);
   useEffect(() => {
     if (isNormalAdmin && userProfile) {
       formik.setFieldValue("country", userProfile.countryID);
@@ -166,7 +240,7 @@ const OwnerSetupScreen = () => {
   const handleClose = () => {
     if (showInfoModal.type === "success") {
       formik.resetForm();
-      navigation.goBack();
+      navigation.navigate("OwnerListScreen");
     }
     setShowInfoModal({ isOpen: false, message: "", type: "success" });
   };
@@ -242,62 +316,64 @@ const OwnerSetupScreen = () => {
                 containerStyle={styles.input}
               />
 
-              <View style={styles.passwordRow}>
-                <View style={styles.passwordColumn}>
-                  <Text style={styles.label}>Password</Text>
-                  <InputText
-                    maxLength={30}
-                    placeholder="Create password"
-                    value={formik.values.password}
-                    onChange={formik.handleChange("password")}
-                    name={"password"}
-                    touched={formik.touched}
-                    errors={formik.errors}
-                    error={formik.errors.password && formik.touched.password}
-                    secureTextEntry={hidePassword}
-                    actionRight={() => (
-                      <TouchableOpacity
-                        onPress={() => setHidePassword(!hidePassword)}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        {hidePassword ? <SvgEyeOutline /> : <SvgEye />}
-                      </TouchableOpacity>
-                    )}
-                    containerStyle={styles.input}
-                  />
-                </View>
+              {!isEdit && (
+                <View style={styles.passwordRow}>
+                  <View style={styles.passwordColumn}>
+                    <Text style={styles.label}>Password</Text>
+                    <InputText
+                      maxLength={30}
+                      placeholder="Create password"
+                      value={formik.values.password}
+                      onChange={formik.handleChange("password")}
+                      name={"password"}
+                      touched={formik.touched}
+                      errors={formik.errors}
+                      error={formik.errors.password && formik.touched.password}
+                      secureTextEntry={hidePassword}
+                      actionRight={() => (
+                        <TouchableOpacity
+                          onPress={() => setHidePassword(!hidePassword)}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          {hidePassword ? <SvgEyeOutline /> : <SvgEye />}
+                        </TouchableOpacity>
+                      )}
+                      containerStyle={styles.input}
+                    />
+                  </View>
 
-                <View style={styles.passwordColumn}>
-                  <Text style={styles.label}>Confirm Password</Text>
-                  <InputText
-                    maxLength={30}
-                    placeholder="Confirm password"
-                    value={formik.values.confirmPassword}
-                    onChange={formik.handleChange("confirmPassword")}
-                    name={"confirmPassword"}
-                    touched={formik.touched}
-                    errors={formik.errors}
-                    error={
-                      formik.errors.confirmPassword &&
-                      formik.touched.confirmPassword
-                    }
-                    secureTextEntry={hidePassword1}
-                    actionRight={() => (
-                      <TouchableOpacity
-                        onPress={() => setHidePassword1(!hidePassword1)}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                      >
-                        {hidePassword1 ? <SvgEyeOutline /> : <SvgEye />}
-                      </TouchableOpacity>
-                    )}
-                    containerStyle={styles.input}
-                  />
+                  <View style={styles.passwordColumn}>
+                    <Text style={styles.label}>Confirm Password</Text>
+                    <InputText
+                      maxLength={30}
+                      placeholder="Confirm password"
+                      value={formik.values.confirmPassword}
+                      onChange={formik.handleChange("confirmPassword")}
+                      name={"confirmPassword"}
+                      touched={formik.touched}
+                      errors={formik.errors}
+                      error={
+                        formik.errors.confirmPassword &&
+                        formik.touched.confirmPassword
+                      }
+                      secureTextEntry={hidePassword1}
+                      actionRight={() => (
+                        <TouchableOpacity
+                          onPress={() => setHidePassword1(!hidePassword1)}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                        >
+                          {hidePassword1 ? <SvgEyeOutline /> : <SvgEye />}
+                        </TouchableOpacity>
+                      )}
+                      containerStyle={styles.input}
+                    />
+                  </View>
                 </View>
-              </View>
+              )}
 
               <Text style={styles.label}>Mobile Number</Text>
               <PhoneInputText
-                ref={phoneInput}
+                ref={mobileInputRef}
                 placeholder="Enter mobile number"
                 name={"mobileno"}
                 error={formik.errors.mobileno && formik.touched.mobileno}
@@ -314,7 +390,7 @@ const OwnerSetupScreen = () => {
 
               <Text style={styles.label}>Whatsapp Number</Text>
               <PhoneInputText
-                ref={phoneInput}
+                ref={whatsappInputRef}
                 placeholder="Enter Whatsapp number"
                 name={"whatsappno"}
                 error={formik.errors.whatsappno && formik.touched.whatsappno}
@@ -420,12 +496,11 @@ const OwnerSetupScreen = () => {
               )}
 
               <TouchableOpacity
-                style={[styles.button]}
+                style={styles.button}
                 onPress={formik.handleSubmit}
-                activeOpacity={0.8}
               >
                 <Text style={styles.buttonText}>
-                  {isSignupLoading ? "Creating Account..." : "Create Account"}
+                  {isEdit ? "Update Owner" : "Create Account"}
                 </Text>
               </TouchableOpacity>
             </View>

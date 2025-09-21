@@ -60,7 +60,7 @@ export const OwnerNavigator = () => {
           title: "Owner Details",
           onHeaderRightPress: () => {
             navigation.navigate("OwnerSetupScreen", {
-              ownerId: route.params.ownerId,
+              owner: route.params.owner,
             });
           },
 
@@ -71,7 +71,7 @@ export const OwnerNavigator = () => {
       <Stack.Screen
         name="OwnerSetupScreen"
         options={({ route }) => ({
-          title: route.params?.ownerId ? "Edit Owner" : "Add Owner",
+          title: route.params?.owner ? "Edit Owner" : "Add Owner",
         })}
         component={OwnerSetupScreen}
       />

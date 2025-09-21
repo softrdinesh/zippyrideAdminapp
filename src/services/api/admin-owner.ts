@@ -64,7 +64,7 @@ export const useGetOwnerById = (ownerId?: number) => {
 export const useEditOwner = () => {
   return useMutation({
     mutationFn: (formData: FormData) =>
-      api.putFormData("api/Admin/UpdateOwnerInfo", formData),
+      api.postFormData("api/Admin/OwnerinfoUpdate", formData),
   });
 };
 
