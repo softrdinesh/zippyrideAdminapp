@@ -7,3 +7,4 @@ export * from "./vehicles";
 export * from "./driver";
 export * from "./admin-auth";
 export * from "./admin-owner";
+export * from "./admin-feedbacks";

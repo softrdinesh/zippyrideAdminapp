@@ -9,6 +9,7 @@ import PaymentScreen from "../Screens/Payment/PaymentScreen";
 import { CustomHeader } from "../uikit/CustomDrawerHeader";
 import { useAuthStore } from "../zustand/useAuthStore";
 import { OwnerNavigator } from "./OwnerStack";
+import FeedbackScreen from "../Screens/Feedback/feedbacksListScreen";
 
 const Drawer = createDrawerNavigator();
 
@@ -42,11 +43,19 @@ export const MainDrawer = () => {
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
       {userRole === "admin" ? (
-        <Drawer.Screen
-          name="OwnerManagement"
-          component={OwnerNavigator}
-          options={{ headerShown: false }}
-        />
+        <>
+          <Drawer.Screen
+            name="OwnerManagement"
+            component={OwnerNavigator}
+            options={{ headerShown: false }}
+          />
+
+          <Drawer.Screen
+            name="Feedback"
+            component={FeedbackScreen}
+            options={{ headerShown: true, title: "Feedbacks" }}
+          />
+        </>
       ) : (
         <>
           <Drawer.Screen name="VehicleSetup" component={VehicleNavigator} />
