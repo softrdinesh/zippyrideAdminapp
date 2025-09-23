@@ -71,7 +71,8 @@ const OwnerSetupScreen = () => {
   const isLoading = isSignupLoading || isLoadingCountries || isLoadingLocations;
 
   const SignUpSchema = Yup.object().shape({
-    username: Yup.string().required("Name is required"),
+    fullname: Yup.string().required("Full Name is required"),
+    username: Yup.string().required("Username is required"),
     companyname: Yup.string().required("Company name is required"),
     telegarmid: Yup.string(),
     password: isEdit
@@ -97,6 +98,7 @@ const OwnerSetupScreen = () => {
 
   const formik = useFormik({
     initialValues: {
+      fullname: "",
       username: "",
       companyname: "",
       telegarmid: "",
@@ -118,7 +120,7 @@ const OwnerSetupScreen = () => {
         //   -F 'LoginUserID=0' \
         //   -F 'TelegramID=string' \
         //   -F 'Ownername=string'
-
+        formdata.append("Ownername", values.fullname);
         formdata.append("Mobileno", values.mobileno);
         formdata.append("Companyname", values.companyname);
         formdata.append("CountryID", values.country);
@@ -136,7 +138,7 @@ const OwnerSetupScreen = () => {
           });
         }
         if (isEdit) {
-          formdata.append("Ownername", values.username);
+          formdata.append("LoginUserID", userProfile?.id);
           formdata.append("OwnerUsername", values.username);
           formdata.append("TelegramID", values.telegarmid);
         } else {
@@ -194,6 +196,7 @@ const OwnerSetupScreen = () => {
       console.log("Editing owner:", owner);
 
       formik.setValues({
+        fullname: owner.ownername || "",
         username: owner.ownerUsername || "",
         companyname: owner.companyname || "",
         mobileno: owner.mobileno || "",
@@ -291,6 +294,18 @@ const OwnerSetupScreen = () => {
 
             <View style={styles.formContainer}>
               <Text style={styles.label}>Full Name</Text>
+              <InputText
+                name={"fullname"}
+                touched={formik.touched}
+                errors={formik.errors}
+                error={formik.errors.fullname && formik.touched.fullname}
+                maxLength={20}
+                placeholder="Enter your full name"
+                value={formik.values.fullname}
+                onChange={formik.handleChange("fullname")}
+                containerStyle={styles.input}
+              />
+              <Text style={styles.label}>Username</Text>
               <InputText
                 name={"username"}
                 touched={formik.touched}
@@ -474,7 +489,6 @@ const OwnerSetupScreen = () => {
                 ]}
                 placeholderStyle={styles.placeholderStyle}
                 selectedTextStyle={styles.selectedTextStyle}
-                disable={isNormalAdmin}
                 data={filteredLocations ?? []}
                 maxHeight={300}
                 labelField="locationName"
@@ -489,7 +503,11 @@ const OwnerSetupScreen = () => {
                   formik.setFieldValue("locationID", item.locationID)
                 }
                 itemTextStyle={styles.dropdownItemText}
-                disable={!formik.values.country || isLoadingLocations}
+                disable={
+                  isNormalAdmin
+                    ? true
+                    : !formik.values.country || isLoadingLocations
+                }
               />
               {formik.touched.locationID && formik.errors.locationID && (
                 <Text style={styles.errorText}>{formik.errors.locationID}</Text>

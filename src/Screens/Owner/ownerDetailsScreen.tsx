@@ -27,6 +27,7 @@ import { PhoneIcon } from "../../icons/SvgPhoneIcon";
 import { KeyIcon } from "../../icons/SvgKeyIcon";
 import { AddressIcon } from "../../icons/SvgAddressIcon";
 import { useAuthStore } from "../../zustand/useAuthStore";
+import { UserIcon } from "../../icons/UserIcon";
 
 const InfoCard = ({
   title,
@@ -190,10 +191,17 @@ const OwnerDetailsScreen: React.FC = () => {
             source={{ uri: ownerDetails.profilepic }}
             style={styles.avatar}
           />
-          <Text style={styles.ownerName}>{ownerDetails.username}</Text>
-          <Text style={styles.companyName}>{ownerDetails.companyname}</Text>
+          <Text style={styles.fullName}>{owner.ownername}</Text>
+          <Text style={styles.companyName}>{owner.companyname}</Text>
         </View>
 
+        <InfoCard title="Account Information">
+          <DetailRowWithIcon
+            Icon={<UserIcon />}
+            label="Username"
+            value={owner.ownerUsername}
+          />
+        </InfoCard>
         {/* Contact Info Card */}
         <InfoCard title="Contact Information">
           <DetailRowWithIcon
@@ -327,7 +335,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  ownerName: {
+  fullName: {
     ...TYPOGRAPHY.header,
     marginTop: 16,
   },

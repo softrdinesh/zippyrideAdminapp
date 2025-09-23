@@ -64,31 +64,10 @@ const Register = () => {
   const [failermessage, setfailermessage] = useState("");
   const useridref = useRef(null);
   const [loading, setloading] = useState(false);
-  const [countrylist, setcountrylist] = useState([]);
-  const [locationlist, setlocationlist] = useState([]);
-
-  // useEffect(() => {
-  //   getCurrentLocation();
-  // }, []);
-
-  const getCurrentLocation = async () => {
-    Geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-      },
-      (error) => {
-        console.error("Error getting location:", error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 10000,
-      }
-    );
-  };
 
   const SignUpSchema = Yup.object().shape({
-    username: Yup.string().required("Name is required"),
+    fullname: Yup.string().required("Full Name is required"),
+    username: Yup.string().required("Username is required"),
     companyname: Yup.string().required("Company name is required"),
     telegarmid: Yup.string(),
     password: Yup.string()
@@ -112,6 +91,7 @@ const Register = () => {
 
   const formik = useFormik({
     initialValues: {
+      fullname: "",
       username: "",
       companyname: "",
       telegarmid: "",
@@ -130,6 +110,7 @@ const Register = () => {
       try {
         const formdata = new FormData();
         formdata.append("Profilepic", "");
+        formdata.append("Ownername", values.fullname);
         formdata.append("Mobileno", values.mobileno);
         formdata.append("Companyname", values.companyname);
         formdata.append("CountryID", values.country);
@@ -181,34 +162,6 @@ const Register = () => {
       (location) => location.countryID === formik.values.country
     );
   }, [allLocations, formik.values.country]);
-
-  //   if (!image || !useridref.current) return;
-
-  //   setIsLoading(true);
-  //   try {
-  //     const formData = new FormData();
-  //     formData.append('file', {
-  //       uri: image.path,
-  //       name: image.filename || `profile_${Date.now()}.jpg`,
-  //       type: image.mime || 'image/jpeg',
-  //     });
-
-  //     await axios.post(
-  //       `https://uat.zippyrideuserapi.projectpulse360.com/api/users/Uploadsignupuserpic/${useridref.current}`,
-  //       formData,
-  //       {
-  //         headers: {
-  //           'Content-Type': 'multipart/form-data',
-  //           Accept: 'application/json',
-  //         },
-  //       }
-  //     );
-  //   } catch (error) {
-  //     console.error('Upload error:', error);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
   const handleClose = () => {
     navigation.navigate("Login");
@@ -325,6 +278,18 @@ const Register = () => {
 
             <View style={styles.formContainer}>
               <Text style={styles.label}>Full Name</Text>
+              <InputText
+                name={"fullname"}
+                touched={formik.touched}
+                errors={formik.errors}
+                error={formik.errors.fullname && formik.touched.fullname}
+                maxLength={20}
+                placeholder="Enter your full name"
+                value={formik.values.fullname}
+                onChange={formik.handleChange("fullname")}
+                containerStyle={styles.input}
+              />
+              <Text style={styles.label}>Username</Text>
               <InputText
                 name={"username"}
                 touched={formik.touched}

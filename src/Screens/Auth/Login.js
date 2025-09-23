@@ -259,7 +259,7 @@ const SignInScreen = () => {
           if (response?.code === 5999 && response?.token) {
             loginUser(
               {
-                id: null,
+                id: response.userID,
                 username: values.username,
                 token: response.token,
                 isSuperAdmin: response.issuperadmin,

@@ -43,7 +43,7 @@ const OwnerCard = ({
       <View style={styles.cardDetails}>
         <View style={styles.nameRow}>
           <Text style={styles.ownerName} numberOfLines={1}>
-            {item.ownerUsername}
+            {item.ownername}
           </Text>
           <View style={[styles.statusBadge, statusStyle.container]}>
             <Text style={[styles.statusText, statusStyle.text]}>

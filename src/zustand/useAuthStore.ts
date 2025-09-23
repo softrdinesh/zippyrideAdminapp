@@ -14,6 +14,7 @@ export interface UserProfile {
   isSuperAdmin?: boolean;
   locationID?: number;
   countryID?: number;
+  userID?: number;
 }
 
 interface AuthState {
