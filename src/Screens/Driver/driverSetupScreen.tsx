@@ -45,7 +45,7 @@ const validationSchema = Yup.object().shape({
   Mobileno: Yup.string().required("Mobile Number is required"),
   Whatsappno: Yup.string().required("Whatsapp Number is required"),
   Licenseexpirydate: Yup.date().required("License expiry date is required"),
-  // Address: Yup.string().required("Address is required"),
+  Address: Yup.string().required("Address is required"),
   VehicleID: Yup.number().required("A vehicle must be assigned"),
   DriverPicFile: Yup.string().required("Driver photo is required"),
 });
@@ -128,7 +128,7 @@ const DriverSetupScreen = ({ route }) => {
         }
         console.log("RESPONSE ==>", response);
 
-        if (response?.code === 5999) {
+        if (response?.code === 5999 || response?.driverID) {
           // Check for a successful response
           Toast.show({
             type: "success",

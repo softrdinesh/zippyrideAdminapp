@@ -25,6 +25,7 @@ import { LicenseIcon } from "../../icons/SvgLocationIcon";
 import { KeyIcon } from "../../icons/SvgKeyIcon";
 import { ClockIcon } from "../../icons/SvgClockIcon";
 import { StarIcon } from "../../icons/SvgRating";
+import { UserIcon } from "../../icons/UserIcon";
 
 const InfoCard = ({
   title,
@@ -129,6 +130,7 @@ const DriverDetailsScreen: React.FC = ({ route }: any) => {
             style={styles.avatar}
           />
           <Text style={styles.driverName}>{driver.drivername}</Text>
+          <Text style={styles.companyName}>{driver.companyname}</Text>
           <Rating rating={driver.rating} />
           <View style={[styles.statusBadge, statusStyle.container]}>
             <Text style={[styles.statusText, statusStyle.text]}>
@@ -136,6 +138,20 @@ const DriverDetailsScreen: React.FC = ({ route }: any) => {
             </Text>
           </View>
         </View>
+
+        {/* Account & Association Card */}
+        <InfoCard title="Account & Association">
+          <DetailRowWithIcon
+            Icon={<UserIcon />}
+            label="Username"
+            value={driver.riderLoginAccountname}
+          />
+          <DetailRowWithIcon
+            Icon={<UserIcon />}
+            label="Associated Owner"
+            value={driver.owneraccountName}
+          />
+        </InfoCard>
 
         {/* Contact Info Card */}
         <InfoCard title="Contact Information">
@@ -155,9 +171,18 @@ const DriverDetailsScreen: React.FC = ({ route }: any) => {
             value={driver.telegramID}
           />
           <DetailRowWithIcon
+            Icon={
+              <Text style={styles.genderIconText}>
+                {driver.isFemale === 1 ? "F" : "M"}
+              </Text>
+            }
+            label="Gender"
+            value={driver.isFemale === 1 ? "Female" : "Male"}
+          />
+          <DetailRowWithIcon
             Icon={<AddressIcon />}
             label="Address"
-            value={`${driver.riderAddress}`}
+            value={driver.riderAddress}
           />
         </InfoCard>
 
@@ -257,6 +282,11 @@ const styles = StyleSheet.create({
     color: colors.gray[400],
     marginLeft: 8,
   },
+  companyName: {
+    ...TYPOGRAPHY.body,
+    color: colors.gray[400],
+    marginTop: 4,
+  },
   statusBadge: {
     marginTop: 12,
     paddingHorizontal: 12,
@@ -327,6 +357,11 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.body,
     fontWeight: "500",
     marginLeft: 12,
+  },
+  genderIconText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: colors.gray[500],
   },
 });
 
