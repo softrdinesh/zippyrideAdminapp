@@ -28,6 +28,12 @@ const OwnerCard = ({
   const statusStyle =
     item.status === "Active" ? styles.statusActive : styles.statusInactive;
 
+  const shouldShowPaymentInfo =
+    item.isPaymentPending &&
+    item.amount > 0 &&
+    item.lastpaymentDate !== "01-01-0001" &&
+    item.nextpaymentTime !== "01-01-0001";
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <Image
@@ -53,7 +59,7 @@ const OwnerCard = ({
         </View>
         <Text style={styles.companyName}>{item.companyname}</Text>
 
-        {isPaymentDue && (
+        {shouldShowPaymentInfo && (
           <View style={styles.paymentInfoContainer}>
             <Text style={styles.paymentText}>
               Last Paid:{" "}
