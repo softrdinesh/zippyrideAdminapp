@@ -25,6 +25,8 @@ import {
   useGetVehicleColors,
   useGetVehicleTypes,
   useSetupVehicle,
+  useAdminSetupVehicle,
+  useAdminEditVehicle,
 } from "../../services/api";
 import Loader from "../../uikit/Loader/Loader";
 import CommonModal from "../../uikit/CommonModal";
@@ -41,8 +43,8 @@ import { useNavigation } from "@react-navigation/native";
 const validationSchema = Yup.object().shape({
   Vehno: Yup.string()
     .matches(
-      /^[A-Za-z0-9]{8}$/,
-      "Vehicle number must be 8 alphanumeric characters"
+      /^[A-Za-z0-9]{10}$/,
+      "Vehicle number must be 10 alphanumeric characters"
     )
     .required("Vehicle number is required"),
   Chasisno: Yup.string()
@@ -73,7 +75,7 @@ const VehicleSetupScreen = ({ route }) => {
   });
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
 
-  const { setIsVehicleTag } = useAuthStore();
+  const { setIsVehicleTag, userProfile, userRole } = useAuthStore();
   const activeOwnerId = useActiveOwnerId();
   const { data, isLoading: isLoadingVehicleDetails } =
     useGetVehicleById(vehicleId);
@@ -83,11 +85,15 @@ const VehicleSetupScreen = ({ route }) => {
 
   const setupVehicleMutation = useSetupVehicle();
   const editVehicleMutation = useEditVehicle();
+  const adminSetupVehicleMutation = useAdminSetupVehicle();
+  const adminEditVehicleMutation = useAdminEditVehicle();
 
   const isLoading =
     isLoadingVehicleDetails ||
     setupVehicleMutation.isPending ||
     editVehicleMutation.isPending ||
+    adminSetupVehicleMutation.isPending ||
+    adminEditVehicleMutation.isPending ||
     isLoadingTypes ||
     isLoadingColors;
 
@@ -138,15 +144,39 @@ const VehicleSetupScreen = ({ route }) => {
 
         let response = null;
 
-        if (vehicleId) {
-          formData.append("VehicleID", vehicleId);
-          formData.append("isActive", true);
-          response = await editVehicleMutation.mutateAsync(formData);
+        if (userRole === "admin") {
+          formData.append("LoginuserID", userProfile.id); // The logged-in admin's ID
+          formData.append("IsActive", true);
+
+          if (isEdit) {
+            formData.append("VehicleID", vehicleId);
+
+            response = await adminEditVehicleMutation.mutateAsync(formData);
+          } else {
+            response = await adminSetupVehicleMutation.mutateAsync(formData);
+          }
         } else {
-          formData.append("CreateDate", moment().format("YYYY-MM-DD"));
-          formData.append("UpdateDate", moment().format("YYYY-MM-DD"));
-          response = await setupVehicleMutation.mutateAsync(formData);
+          // User is an owner
+          if (isEdit) {
+            formData.append("VehicleID", vehicleId);
+            formData.append("isActive", true);
+            response = await editVehicleMutation.mutateAsync(formData);
+          } else {
+            formData.append("CreateDate", moment().format("YYYY-MM-DD"));
+            formData.append("UpdateDate", moment().format("YYYY-MM-DD"));
+            response = await setupVehicleMutation.mutateAsync(formData);
+          }
         }
+        // EXISTING CODE
+        // if (vehicleId) {
+        //   formData.append("VehicleID", vehicleId);
+        //   formData.append("isActive", true);
+        //   response = await editVehicleMutation.mutateAsync(formData);
+        // } else {
+        //   formData.append("CreateDate", moment().format("YYYY-MM-DD"));
+        //   formData.append("UpdateDate", moment().format("YYYY-MM-DD"));
+        //   response = await setupVehicleMutation.mutateAsync(formData);
+        // }
 
         console.log("Vehicle Setup Response:", response);
 

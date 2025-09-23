@@ -138,3 +138,28 @@ export const useToggleVehicleStatus = () => {
     },
   });
 };
+
+export const useAdminSetupVehicle = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, FormData>({
+    mutationFn: (formData) =>
+      api.postFormData("api/Admin/SetupVehiclebyAdmin", formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+    },
+  });
+};
+
+export const useAdminEditVehicle = () => {
+  const queryClient = useQueryClient();
+  return useMutation<any, Error, FormData>({
+    mutationFn: (formData) =>
+      api.postFormData("api/Admin/UpdateVehicleInfo", formData),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["vehicles"] });
+      queryClient.invalidateQueries({
+        queryKey: ["vehicle", variables.vehicleID],
+      });
+    },
+  });
+};
