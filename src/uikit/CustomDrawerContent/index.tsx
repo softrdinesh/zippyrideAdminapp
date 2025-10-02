@@ -19,6 +19,7 @@ import PaymentMethod from "../../icons/SvgPaymentMethod";
 import { firebase } from "@react-native-firebase/messaging";
 import SvgOwnerIcon from "../../icons/SvgOwner";
 import SvgFeedbackIcon from "../../icons/SvgFeedback";
+import SvgComplaintIcon from "../../icons/SvgComplaints";
 
 const LogoutIcon = ({ color = colors.gray[600], size = 24 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -93,6 +94,11 @@ export const CustomDrawerContent = (props) => {
               <View style={styles.divider} />
               {renderDrawerItem("OwnerManagement", "Owners", SvgOwnerIcon)}
               {renderDrawerItem("Feedback", "View Feedback", SvgFeedbackIcon)}
+              {renderDrawerItem(
+                "Complaints",
+                "View Complaints",
+                SvgComplaintIcon
+              )}
             </>
           ) : (
             <>

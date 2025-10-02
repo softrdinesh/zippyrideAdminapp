@@ -10,6 +10,7 @@ import { CustomHeader } from "../uikit/CustomDrawerHeader";
 import { useAuthStore } from "../zustand/useAuthStore";
 import { OwnerNavigator } from "./OwnerStack";
 import FeedbackScreen from "../Screens/Feedback/feedbacksListScreen";
+import ComplaintScreen from "../Screens/Complaint/complaintListScreen";
 
 const Drawer = createDrawerNavigator();
 
@@ -54,6 +55,11 @@ export const MainDrawer = () => {
             name="Feedback"
             component={FeedbackScreen}
             options={{ headerShown: true, title: "Feedbacks" }}
+          />
+          <Drawer.Screen
+            name="Complaints"
+            component={ComplaintScreen}
+            options={{ headerShown: true, headerTitle: "Customer Complaints" }}
           />
         </>
       ) : (
