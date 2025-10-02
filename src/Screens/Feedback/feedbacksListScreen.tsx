@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import Animated, { FadeInUp } from "react-native-reanimated";
+import Animated, { FadeInUp, Layout } from "react-native-reanimated";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from "moment";
 import { colors } from "../../uikit/UikitUtils/colors";
@@ -46,18 +46,52 @@ const FeedbackCard = ({
 }: {
   item: FeedbackListItem;
   index: number;
-}) => (
-  <AnimatedTouchableOpacity
-    style={styles.card}
-    entering={FadeInUp.delay(index * 30)}
-  >
-    <Text style={styles.feedbackContent}>"{item.feedbackContent}"</Text>
-    <View style={styles.cardFooter}>
-      <Text style={styles.feedbackAuthor}>- {item.feedbackGivenBy}</Text>
-      <Text style={styles.feedbackDate}>{item.feedbackSubmittedDate}</Text>
-    </View>
-  </AnimatedTouchableOpacity>
-);
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [canExpand, setCanExpand] = useState(false);
+  const numberOfLines = 5; // Show up to 5 lines of the large text initially
+
+  return (
+    <AnimatedTouchableOpacity
+      style={styles.card}
+      entering={FadeInUp.delay(index * 50)}
+      // Animate layout changes when the card expands/collapses
+      layout={Layout.springify()}
+      onPress={() => canExpand && setIsExpanded(!isExpanded)}
+      activeOpacity={0.9}
+    >
+      {/* The main feedback content, now with a larger font */}
+      <Text
+        style={styles.feedbackContent}
+        numberOfLines={isExpanded ? undefined : numberOfLines}
+        onTextLayout={(e) => {
+          // Check if the text is long enough to need a "Read More" button
+          if (e.nativeEvent.lines.length > numberOfLines && !canExpand) {
+            setCanExpand(true);
+          }
+        }}
+      >
+        {item.feedbackContent}
+      </Text>
+
+      {/* "Read More" button appears only if needed */}
+      {canExpand && (
+        <Text style={styles.readMoreText}>
+          {isExpanded ? "Show Less" : "Show More"}
+        </Text>
+      )}
+
+      {/* Footer with author and date */}
+      <View style={styles.cardFooter}>
+        <Text style={styles.feedbackAuthor}>
+          <Text style={styles.footerLabel}>Feedback given by:</Text>{" "}
+          {item.feedbackGivenBy}
+        </Text>
+        <Text style={styles.footerDate}>{item.feedbackSubmittedDate}</Text>
+      </View>
+    </AnimatedTouchableOpacity>
+  );
+};
 
 // --- Main Screen Component ---
 const FeedbackScreen: React.FC = () => {
@@ -171,12 +205,72 @@ const FeedbackScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.gray[100],
   },
+  listContainer: {
+    padding: 24,
+  },
+  card: {
+    backgroundColor: colors.base.white,
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: colors.base.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  feedbackContent: {
+    ...TYPOGRAPHY.body, // Use a base style
+    fontSize: 16, // Make it larger
+    lineHeight: 24, // Improve readability
+    color: colors.text.primary,
+    marginBottom: 12,
+  },
+  readMoreText: {
+    ...TYPOGRAPHY.body,
+    color: colors.brand.primary,
+    fontWeight: "bold",
+    marginTop: -4, // Pull it closer to the text
+    marginBottom: 16,
+  },
+  cardFooter: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray[100],
+  },
+  feedbackAuthor: {
+    ...TYPOGRAPHY.caption,
+    fontSize: 14,
+    color: colors.text.primary,
+  },
+  footerLabel: {
+    color: colors.gray[400],
+    fontWeight: "normal",
+  },
+  footerDate: {
+    ...TYPOGRAPHY.caption,
+    fontSize: 14,
+    color: colors.gray[400],
+    marginTop: 4,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+    marginTop: "30%",
+  },
+  emptyText: {
+    ...TYPOGRAPHY.header,
+    fontSize: 18,
+    color: colors.gray[600],
+  },
+  // --- (Search and filter styles remain the same) ---
   controlsContainer: {
     paddingHorizontal: 24,
     paddingTop: 16,
@@ -192,12 +286,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
   },
-  searchInput: {
-    ...TYPOGRAPHY.body,
-    flex: 1,
-    height: 48,
-    marginLeft: 8,
-  },
+  searchInput: { ...TYPOGRAPHY.body, flex: 1, height: 48, marginLeft: 8 },
   dateFilterWrapper: {
     flexDirection: "row",
     alignItems: "center",
@@ -216,68 +305,11 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     color: colors.gray[600],
   },
-  clearButton: {
-    marginLeft: 12,
-    padding: 8,
-  },
+  clearButton: { marginLeft: 12, padding: 8 },
   clearButtonText: {
     ...TYPOGRAPHY.body,
     color: colors.brand.primary,
     fontWeight: "600",
-  },
-  listContainer: {
-    padding: 24,
-  },
-  card: {
-    backgroundColor: colors.base.white,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: colors.base.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  feedbackContent: {
-    ...TYPOGRAPHY.body,
-    fontStyle: "italic",
-    lineHeight: 22,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 16,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: colors.gray[100],
-  },
-  feedbackAuthor: {
-    ...TYPOGRAPHY.caption,
-    color: colors.text.primary,
-    fontWeight: "bold",
-  },
-  feedbackDate: {
-    ...TYPOGRAPHY.caption,
-    color: colors.gray[400],
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-    marginTop: "30%",
-  },
-  emptyText: {
-    ...TYPOGRAPHY.header,
-    fontSize: 18,
-    color: colors.gray[600],
-  },
-  emptySubText: {
-    ...TYPOGRAPHY.body,
-    color: colors.gray[500],
-    marginTop: 8,
-    textAlign: "center",
   },
 });
 
