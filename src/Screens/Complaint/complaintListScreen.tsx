@@ -18,8 +18,7 @@ import {
   ComplaintListItem,
   useGetAllComplaints,
 } from "../../services/api/admin-complaints";
-
-import Toast from "react-native-toast-message";
+import { useNavigation } from "@react-navigation/native";
 
 const SearchIcon = () => (
   <Svg width="20" height="20" viewBox="0 0 24 24">
@@ -38,14 +37,16 @@ const AttachmentIcon = () => (
   </Svg>
 );
 
-const AnimatedView = Animated.createAnimatedComponent(View);
+const AnimatedView = Animated.createAnimatedComponent(TouchableOpacity);
 
 const ComplaintCard = ({
   item,
   index,
+  onPress,
 }: {
   item: ComplaintListItem;
   index: number;
+  onPress?: () => void;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [canExpand, setCanExpand] = useState(false);
@@ -65,6 +66,7 @@ const ComplaintCard = ({
       style={styles.card}
       entering={FadeInUp.delay(index * 50)}
       layout={Layout.springify()}
+      onPress={onPress}
     >
       <View style={styles.cardHeader}>
         <View style={styles.headerLeft}>
@@ -129,10 +131,10 @@ const ComplaintCard = ({
   );
 };
 
-const ComplaintScreen: React.FC = () => {
+const ComplaintListScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: complaints, isLoading, isError } = useGetAllComplaints();
-
+  const navigation = useNavigation();
   const filteredComplaints = useMemo(() => {
     let data = complaints || [];
     if (searchQuery) {
@@ -172,7 +174,13 @@ const ComplaintScreen: React.FC = () => {
           data={filteredComplaints}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item, index }) => (
-            <ComplaintCard item={item} index={index} />
+            <ComplaintCard
+              item={item}
+              index={index}
+              onPress={() =>
+                navigation.navigate("ComplaintDetails", { complaint: item })
+              }
+            />
           )}
           contentContainerStyle={styles.listContainer}
           ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
@@ -288,8 +296,8 @@ const styles = StyleSheet.create({
     ...TYPOGRAPHY.caption,
     color: colors.gray[600],
     marginLeft: 10,
-    flexShrink: 1, // Allow text to shrink if filename is long
+    flexShrink: 1,
   },
 });
 
-export default ComplaintScreen;
+export default ComplaintListScreen;

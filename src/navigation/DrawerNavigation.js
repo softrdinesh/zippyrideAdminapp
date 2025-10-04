@@ -11,6 +11,7 @@ import { useAuthStore } from "../zustand/useAuthStore";
 import { OwnerNavigator } from "./OwnerStack";
 import FeedbackScreen from "../Screens/Feedback/feedbacksListScreen";
 import ComplaintScreen from "../Screens/Complaint/complaintListScreen";
+import { ComplaintNavigator } from "./ComplaintStack";
 
 const Drawer = createDrawerNavigator();
 
@@ -56,11 +57,7 @@ export const MainDrawer = () => {
             component={FeedbackScreen}
             options={{ headerShown: true, title: "Feedbacks" }}
           />
-          <Drawer.Screen
-            name="Complaints"
-            component={ComplaintScreen}
-            options={{ headerShown: true, headerTitle: "Customer Complaints" }}
-          />
+          <Drawer.Screen name="Complaints" component={ComplaintNavigator} />
         </>
       ) : (
         <>
