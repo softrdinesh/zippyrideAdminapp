@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import RazorpayCheckout from "react-native-razorpay";
 import Svg, { Path } from "react-native-svg";
 import Toast from "react-native-toast-message";
+import { useAuthStore } from "../../zustand/useAuthStore";
 
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
@@ -35,6 +37,7 @@ const CheckCircleIcon = () => (
 const PaymentScreen: React.FC = () => {
   const activeOwnerId = useActiveOwnerId();
   const [isPaying, setIsPaying] = useState(false);
+  const { userProfile, userRole, logoutUser } = useAuthStore();
 
   const {
     data: paymentInfo,
@@ -47,15 +50,20 @@ const PaymentScreen: React.FC = () => {
   const updatePaymentMutation = useUpdateOnlinePayment();
   const updateFailedPaymentMutation = useUpdateFailedPayment();
 
+  // Calculate total amount and check if there are pending payments
+  const totalAmount = paymentInfo?.reduce((total, payment) => total + (payment.amount || 0), 0) || 0;
+  const hasPendingPayments = totalAmount > 0;
+  const pendingVehicles = paymentInfo?.filter(payment => payment.amount > 0) || [];
+
   const handlePayment = async () => {
-    if (!paymentInfo?.amount) return;
+    if (!totalAmount || pendingVehicles.length === 0) return;
 
     setIsPaying(true);
     let orderIdForFailureHandling: string | null = null;
 
     try {
       const formdata = new FormData();
-      formdata.append("amount", paymentInfo.amount * 100);
+      formdata.append("amount", totalAmount * 100);
       formdata.append("currency", "INR");
 
       const order = await generateOrderMutation.mutateAsync(formdata);
@@ -75,6 +83,8 @@ const PaymentScreen: React.FC = () => {
         prefill: {
           contact: userProfile?.mobileno || "9999999999",
           name: userProfile?.username || "Admin User",
+          // contact: "9999999999",
+          // name:  "Admin User",
         },
         theme: { color: colors.brand.primary },
       };
@@ -82,15 +92,26 @@ const PaymentScreen: React.FC = () => {
       const paymentResponse = await RazorpayCheckout.open(options);
       console.log("paymentResponse", paymentResponse);
 
-      await updatePaymentMutation.mutateAsync({
-        ownerID: activeOwnerId,
-        razorpaymentID: paymentResponse.razorpay_payment_id,
-      });
+      // Update payment for all pending vehicles
+   const updatePromises = pendingVehicles.map((vehicle, index) => {
+  const payload = {
+    ownerID: activeOwnerId,
+    vehicleID: vehicle.vehicleID,
+    razorpaymentID: paymentResponse.razorpay_payment_id,
+  };
+
+  console.log(`🔹 [${index + 1}] updateOnlinePayment payload:`, payload);
+
+  return updatePaymentMutation.mutateAsync(payload);
+});
+
+await Promise.all(updatePromises);
+
 
       Toast.show({
         type: "success",
         text1: "Payment Successful!",
-        text2: "Your payment has been processed.",
+        text2: `Payment processed for ${pendingVehicles.length} vehicle(s).`,
       });
 
       refetch();
@@ -104,7 +125,7 @@ const PaymentScreen: React.FC = () => {
           const failurePayload = {
             ownerID: activeOwnerId,
             razorpaymentID: orderIdForFailureHandling,
-            amount: paymentInfo.amount,
+            amount: totalAmount,
             isCancelpayment: isCancelledByUser,
             ispaymentFail: !isCancelledByUser,
           };
@@ -149,36 +170,64 @@ const PaymentScreen: React.FC = () => {
   }
 
   if (isError) {
-    // ... Error handling for the initial fetch
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.title}>Error</Text>
+          <Text style={styles.description}>
+            Failed to load payment information. Please try again.
+          </Text>
+          <TouchableOpacity style={styles.button} onPress={() => refetch()}>
+            <Text style={styles.buttonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
   }
 
-  // If payment is NOT pending
-  if (!paymentInfo?.isPaymentPending) {
+  // If no pending payments
+  if (!hasPendingPayments) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.content}>
           <CheckCircleIcon />
           <Text style={styles.title}>All Cleared!</Text>
           <Text style={styles.description}>
-            {paymentInfo?.message ||
-              "You have no pending payments at the moment."}
+            You have no pending payments at the moment.
           </Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  // If payment IS pending
+  // If there are pending payments
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Payment Due</Text>
-        <Text style={styles.amount}>
-          ₹ {paymentInfo?.amount?.toFixed(2) || "0.00"}
-        </Text>
-        <Text style={styles.description}>
-          Please clear your outstanding balance to continue using our services.
-        </Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Payment Due</Text>
+          <Text style={styles.totalAmount}>
+            Total: ₹ {totalAmount.toFixed(2)}
+          </Text>
+          <Text style={styles.description}>
+            Please clear your outstanding balance to continue using our services.
+          </Text>
+        </View>
+
+        {/* Vehicle Cards */}
+        <View style={styles.cardContainer}>
+          {pendingVehicles.map((vehicle, index) => (
+            <View key={index} style={styles.card}>
+              <View style={styles.cardHeader}>
+                <Text style={styles.vehicleNumber}>Vehicle No :  {vehicle.vehicleno}</Text>
+              </View>
+              <View style={styles.cardBody}>
+                <Text style={styles.amountLabel}>Amount Due</Text>
+                <Text style={styles.cardAmount}>₹ {vehicle.amount.toFixed(2)}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
 
         <TouchableOpacity
           style={[styles.button, isPaying && styles.buttonDisabled]}
@@ -191,7 +240,7 @@ const PaymentScreen: React.FC = () => {
             <Text style={styles.buttonText}>Pay Now</Text>
           )}
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -200,6 +249,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.gray[100],
+  },
+  scrollContent: {
+    padding: 20,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 16,
   },
   content: {
     flex: 1,
@@ -218,19 +274,60 @@ const styles = StyleSheet.create({
   },
   title: {
     ...TYPOGRAPHY.header,
-    marginBottom: 16,
+    fontSize: 18,
+    marginBottom: 6,
   },
-  amount: {
+  totalAmount: {
     ...TYPOGRAPHY.header,
-    fontSize: 48,
+    fontSize: 22,
     color: colors.brand.primary,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   description: {
     ...TYPOGRAPHY.body,
+    fontSize: 13,
     textAlign: "center",
     color: colors.gray[500],
-    marginBottom: 40,
+  },
+  cardContainer: {
+    marginBottom: 16,
+  },
+  card: {
+    backgroundColor: colors.base.white,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardHeader: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray[200],
+    paddingBottom: 8,
+    marginBottom: 8,
+  },
+  vehicleNumber: {
+    ...TYPOGRAPHY.header,
+    fontSize: 15,
+    color: "black",
+  },
+  cardBody: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  amountLabel: {
+    ...TYPOGRAPHY.body,
+    color: colors.gray[600],
+    fontSize: 12,
+  },
+  cardAmount: {
+    ...TYPOGRAPHY.header,
+    fontSize: 16,
+    color: colors.brand.primary,
   },
   button: {
     width: "100%",

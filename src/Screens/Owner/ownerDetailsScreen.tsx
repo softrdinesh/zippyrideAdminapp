@@ -76,7 +76,7 @@ const OwnerDetailsScreen: React.FC = () => {
   const route = useRoute();
   const { setManagedOwner } = useAuthStore();
   const { owner }: { owner: OwnerListItem } = route.params;
-  console.log("owner", owner);
+  console.log("ownersss", owner);
 
   const [isActive, setIsActive] = useState(owner.status === "Active");
 

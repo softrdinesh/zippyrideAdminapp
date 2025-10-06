@@ -25,6 +25,7 @@ export interface RazorpayOrder {
 export interface UpdatePaymentPayload {
   ownerID: number;
   razorpaymentID: string;
+  vehicleID:number
 }
 
 export interface UpdateFailedPaymentPayload {

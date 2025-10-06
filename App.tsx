@@ -31,7 +31,7 @@ const queryClient = new QueryClient({
 });
 
 const NavigationRoot = () => {
-  const { isAuthenticated, isVehicleTag } = useAuthStore();
+  const { isAuthenticated, isVehicleTag, } = useAuthStore();
 
   return (
     <Stack.Navigator
