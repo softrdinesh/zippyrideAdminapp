@@ -13,6 +13,7 @@ import Svg, { Path } from "react-native-svg";
 import { useAuthStore } from "../../zustand/useAuthStore";
 import { TYPOGRAPHY } from "../../theme/typography";
 import SvgDriver from "../../icons/SvgDriver";
+import IncomeIcon from "../../icons/Svgtrans";
 import SvgCarIcon from "../../icons/SvgCarIcon";
 import { colors } from "../UikitUtils/colors";
 import PaymentMethod from "../../icons/SvgPaymentMethod";
@@ -113,6 +114,8 @@ export const CustomDrawerContent = (props) => {
                 SvgDriver
               )}
               {renderDrawerItem("PaymentScreen", "Payment", PaymentMethod)}
+         {renderDrawerItem("PaymentTrans", "Payment Transactions", IncomeIcon)}
+
             </>
           )}
         </View>

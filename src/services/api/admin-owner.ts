@@ -61,6 +61,33 @@ export const useGetOwnerById = (ownerId?: number) => {
   });
 };
 
+export const userGetpaymenttranscation = (ownerId?: number) => {
+  return useQuery<OwnerListItem, Error>({
+    queryKey: ["owner", "success-payments", ownerId],
+    queryFn: () => api.get(`api/Admin/GetSuccessPaymentTransactions?ownerId=${ownerId}`),
+    enabled: !!ownerId,
+  });
+};
+
+export const userGetpaymentcancel = (ownerId?: number) => {
+  return useQuery<OwnerListItem, Error>({
+    queryKey: ["owner", "cancel-payments", ownerId],
+    queryFn: () => api.get(`api/Admin/GetcancelPaymentTransactions?OwnerID=${ownerId}`),
+    enabled: !!ownerId,
+  });
+};
+
+export const userGetpaymentfailure = (ownerId?: number) => {
+  return useQuery<OwnerListItem, Error>({
+    queryKey: ["owner", "failure-payments", ownerId],
+    queryFn: () => api.get(`api/Admin/GetfailurePaymentTransactions?OwnerID=${ownerId}`),
+    enabled: !!ownerId,
+  });
+};
+
+
+
+
 export const useEditOwner = () => {
   return useMutation({
     mutationFn: (formData: FormData) =>

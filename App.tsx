@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef,useEffect } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { enableScreens } from "react-native-screens";
@@ -13,6 +13,7 @@ import Toast from "react-native-toast-message";
 import { MainDrawer } from "./src/navigation/DrawerNavigation";
 import DebugNetworkLogger from "./src/uikit/DebugNetworkLogger";
 import DebugTriggerButton from "./src/uikit/DebugNetworkLogger/FloatingButton";
+import {checkVersion,} from './src/uikit/UikitUtils/helpers';
 
 enableScreens();
 
@@ -29,6 +30,7 @@ const queryClient = new QueryClient({
     },
   },
 });
+
 
 const NavigationRoot = () => {
   const { isAuthenticated, isVehicleTag, } = useAuthStore();
@@ -71,7 +73,11 @@ const NavigationRoot = () => {
 
 export default function App() {
   const navigationRef = useRef();
+useEffect(() => {
+   checkVersion();
 
+ 
+}, [])
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView>

@@ -6,13 +6,15 @@ import { CustomDrawerContent } from "../uikit/CustomDrawerContent";
 import { TripsNavigator } from "./TripsStack";
 import { DriverNavigator } from "./DriverStack";
 import PaymentScreen from "../Screens/Payment/PaymentScreen";
+import PaymentScreentrans from "../Screens/PaymentTransactions/Paymenttrans";
+
 import { CustomHeader } from "../uikit/CustomDrawerHeader";
 import { useAuthStore } from "../zustand/useAuthStore";
 import { OwnerNavigator } from "./OwnerStack";
 import FeedbackScreen from "../Screens/Feedback/feedbacksListScreen";
 import ComplaintScreen from "../Screens/Complaint/complaintListScreen";
 import { ComplaintNavigator } from "./ComplaintStack";
-
+// import {PaymenttranNavigator} from '../Screens/PaymentTransactions/Paymenttrans'
 const Drawer = createDrawerNavigator();
 
 export const MainDrawer = () => {
@@ -63,6 +65,16 @@ export const MainDrawer = () => {
         <>
           <Drawer.Screen name="VehicleSetup" component={VehicleNavigator} />
           <Drawer.Screen name="TripDetails" component={TripsNavigator} />
+ {/* <Drawer.Screen name="PaymenttranNavigator" component={PaymenttranNavigator} /> */}
+  <Drawer.Screen
+            name="PaymentTrans"
+            component={PaymentScreentrans}
+            options={{
+              headerShown: true,
+              title: "Payment Transactions",
+            }}
+          />
+          
           <Drawer.Screen name="TrackYourDriver" component={DriverNavigator} />
           <Drawer.Screen
             name="PaymentScreen"
