@@ -21,7 +21,8 @@ import { firebase } from "@react-native-firebase/messaging";
 import SvgOwnerIcon from "../../icons/SvgOwner";
 import SvgFeedbackIcon from "../../icons/SvgFeedback";
 import SvgComplaintIcon from "../../icons/SvgComplaints";
-
+import BroadcastIcon from "../../icons/BroadcastIcon";
+import Brocat from '../../assets/broadcast1.svg'
 const LogoutIcon = ({ color = colors.gray[600], size = 24 }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
     <Path
@@ -115,6 +116,7 @@ export const CustomDrawerContent = (props) => {
               )}
               {renderDrawerItem("PaymentScreen", "Payment", PaymentMethod)}
          {renderDrawerItem("PaymentTrans", "Payment Transactions", IncomeIcon)}
+         {renderDrawerItem("BroadcastScreen", "Broadcast ", BroadcastIcon)}
 
             </>
           )}

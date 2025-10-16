@@ -7,7 +7,7 @@ import { TripsNavigator } from "./TripsStack";
 import { DriverNavigator } from "./DriverStack";
 import PaymentScreen from "../Screens/Payment/PaymentScreen";
 import PaymentScreentrans from "../Screens/PaymentTransactions/Paymenttrans";
-
+import BroadcastScreen from "../Screens/Broadcast/BroadcastScreen";
 import { CustomHeader } from "../uikit/CustomDrawerHeader";
 import { useAuthStore } from "../zustand/useAuthStore";
 import { OwnerNavigator } from "./OwnerStack";
@@ -74,7 +74,14 @@ export const MainDrawer = () => {
               title: "Payment Transactions",
             }}
           />
-          
+            <Drawer.Screen
+            name="BroadcastScreen"
+            component={BroadcastScreen}
+            options={{
+              headerShown: true,
+              title: "Broadcast",
+            }}
+          />
           <Drawer.Screen name="TrackYourDriver" component={DriverNavigator} />
           <Drawer.Screen
             name="PaymentScreen"
