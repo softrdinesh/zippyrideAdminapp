@@ -26,6 +26,16 @@ export interface LocationListItem {
   locationName: string;
   countryID: number;
 }
+export interface PackageListItem{
+packageID: number,
+    packagename: string,
+    amountLimit: number,
+    vehicleattachlimit: number,
+    actingDriverlimit: number,
+    nooffreesubscription: number
+}
+
+
 
 export const useLogin = () => {
   return useMutation<LoginResponse, Error, LoginPayload>({
@@ -53,6 +63,13 @@ export const useGetCountries = () => {
     queryFn: () => api.get("GetCountryList"),
   });
 };
+export const useGetPackagelist = () => {
+  return useQuery<PackageListItem[], Error>({
+    queryKey: ["packages"],
+    queryFn: () => api.get("GetPackageList"),
+  });
+};
+
 export const useGetLocations = () => {
   return useQuery<LocationListItem[], Error>({
     queryKey: ["locations"],

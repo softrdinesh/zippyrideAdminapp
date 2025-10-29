@@ -31,7 +31,6 @@ import {
   useSignup,
   useGetCountries,
   useGetLocations,
-  useGetPackagelist
 } from "../../services/api";
 
 import PhoneInputText from "../../uikit/PhoneInputText/PhoneInputText";
@@ -53,10 +52,9 @@ const Register = () => {
   const { data: countries, isPending: isLoadingCountries } = useGetCountries();
   const { data: allLocations, isPending: isLoadingLocations } =
     useGetLocations();
-  const { data: packages, isPending: isLoadingPackages } = useGetPackagelist();
   const { mutateAsync: signupMutation, isPending: isSignupLoading } =
     useSignup();
-  const isLoading = isSignupLoading || isLoadingCountries || isLoadingLocations || isLoadingPackages;
+  const isLoading = isSignupLoading || isLoadingCountries || isLoadingLocations;
   const [countryCode, setCountryCode] = useState("+91");
 
   const [profilepick, setprofilepick] = useState("");
@@ -89,7 +87,6 @@ const Register = () => {
     country: Yup.string().required("Country is required"),
     profilepick: Yup.string().required("Profile image is required"),
     locationID: Yup.number().required("Location is required"),
-    packageID: Yup.number().required("Package is required"),
   });
 
   const formik = useFormik({
@@ -106,7 +103,6 @@ const Register = () => {
       country: "",
       profilepick: "",
       locationID: "",
-      packageID: "",
     },
     validationSchema: SignUpSchema,
     onSubmit: async (values) => {
@@ -120,7 +116,6 @@ const Register = () => {
         formdata.append("CountryID", values.country);
         formdata.append("LocationID", values.locationID);
         formdata.append("Whatsappno", values.whatsappno);
-        formdata.append("PackageID", values.packageID);
         // Attach image if selected, with dynamic name and type
         if (values.profilepick) {
           const imageName = values.profilepick.split("/").pop();
@@ -501,36 +496,6 @@ const Register = () => {
                 <Text style={styles.errorText}>{formik.errors.locationID}</Text>
               )}
 
-              <Text style={styles.label}>Package</Text>
-              <Dropdown
-                style={[
-                  styles.dropdown,
-                  formik.errors.packageID &&
-                    formik.touched.packageID &&
-                    styles.errorBorder,
-                ]}
-                placeholderStyle={styles.placeholderStyle}
-                selectedTextStyle={styles.selectedTextStyle}
-                inputSearchStyle={styles.inputSearchStyle}
-                iconStyle={styles.iconStyle}
-                data={packages ?? []}
-                search
-                maxHeight={300}
-                labelField="packagename"
-                valueField="packageID"
-                placeholder="Select package"
-                searchPlaceholder="Search package..."
-                value={formik.values.packageID}
-                onChange={(item) => {
-                  formik.setFieldValue("packageID", item.packageID);
-                }}
-                itemTextStyle={styles.dropdownItemText}
-                activeColor="#f5f5f5"
-              />
-              {formik.touched.packageID && formik.errors.packageID && (
-                <Text style={styles.errorText}>{formik.errors.packageID}</Text>
-              )}
-
               <Text style={styles.termsText}>
                 By signing up, you agree to our{" "}
                 <Text style={styles.link}>Terms of Service</Text> and{" "}
@@ -730,7 +695,6 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
- 
   passwordRow: {
     flexDirection: "column",
     justifyContent: "space-between",

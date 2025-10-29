@@ -31,6 +31,7 @@
     "react-native-android-location-enabler": "^2.0.1",
     "react-native-element-dropdown": "^2.12.4",
     "react-native-gesture-handler": "2.21.0",
+    "react-native-google-places-autocomplete": "^2.5.7",
     "react-native-image-crop-picker": "^0.42.0",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-maps": "^1.20.1",

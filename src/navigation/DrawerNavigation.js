@@ -1,6 +1,7 @@
 import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
-
+import { Text, StyleSheet } from "react-native"; // Import StyleSheet
+import { colors } from "../uikit/UikitUtils/colors";
 import { VehicleNavigator } from "./VehicleStack";
 import { CustomDrawerContent } from "../uikit/CustomDrawerContent";
 import { TripsNavigator } from "./TripsStack";
@@ -9,16 +10,21 @@ import PaymentScreen from "../Screens/Payment/PaymentScreen";
 import PaymentScreentrans from "../Screens/PaymentTransactions/Paymenttrans";
 import BroadcastScreen from "../Screens/Broadcast/BroadcastScreen";
 import { CustomHeader } from "../uikit/CustomDrawerHeader";
+import Packagescreen from "../Screens/Package/Packagescreen";
 import { useAuthStore } from "../zustand/useAuthStore";
 import { OwnerNavigator } from "./OwnerStack";
 import FeedbackScreen from "../Screens/Feedback/feedbacksListScreen";
 import ComplaintScreen from "../Screens/Complaint/complaintListScreen";
 import { ComplaintNavigator } from "./ComplaintStack";
 // import {PaymenttranNavigator} from '../Screens/PaymentTransactions/Paymenttrans'
+import PackagescreenList from '../Screens/Package/PackageListScreen'
+import { TYPOGRAPHY } from "../theme/typography";
+import {useNavigation} from '@react-navigation/native'
 const Drawer = createDrawerNavigator();
-
+ 
 export const MainDrawer = () => {
   const { userRole } = useAuthStore();
+   const navigation = useNavigation();
   return (
     <Drawer.Navigator
       screenOptions={({ navigation, route }) => ({
@@ -74,12 +80,32 @@ export const MainDrawer = () => {
               title: "Payment Transactions",
             }}
           />
+          <Drawer.Screen
+        name="PackageListScreen"
+        options={{
+          title: "All Trip Packages",
+           headerShown: true,
+          onHeaderRightPress: () => {
+            navigation.navigate("Packagescreen");
+          },
+          headerRightIcon: <Text style={styles.headerActionText}>Add</Text>,
+        }}
+        component={PackagescreenList}
+      />
             <Drawer.Screen
             name="BroadcastScreen"
             component={BroadcastScreen}
             options={{
               headerShown: true,
               title: "Broadcast",
+            }}
+          />
+           <Drawer.Screen
+            name="Packagescreen"
+            component={Packagescreen}
+            options={{
+              headerShown: true,
+              title: "Package",
             }}
           />
           <Drawer.Screen name="TrackYourDriver" component={DriverNavigator} />
@@ -96,3 +122,10 @@ export const MainDrawer = () => {
     </Drawer.Navigator>
   );
 };
+const styles = StyleSheet.create({
+  headerActionText: {
+    ...TYPOGRAPHY.body,
+    color: colors.brand.primary,
+    fontWeight: "600",
+  },
+});
