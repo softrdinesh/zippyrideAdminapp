@@ -15,6 +15,11 @@ export interface UserProfile {
   locationID?: number;
   countryID?: number;
   userID?: number;
+  vehicleAttachLimit?: number;
+  actingDriverLimit?: number;
+  outstationPackageLimit?: number;
+  packagename?: string;
+  packageID?: number;
 }
 
 interface AuthState {
@@ -27,7 +32,7 @@ interface AuthState {
   loginUser: (profile: UserProfile, role: "owner" | "admin") => void;
   logoutUser: () => void;
   setIsVehicleTag: (value: boolean) => void;
-  setManagedOwner: (owner: Owner | null) => void;
+  setManagedOwner: (owner: OwnerListItem | null) => void;
 }
 
 export const useActiveOwnerId = () => {
@@ -56,6 +61,11 @@ export const useAuthStore = create<AuthState>()(
           userRole: role,
           token: profile.token,
           isVehicleTag: profile.isVehicleTag,
+          vehicleAttachLimit: profile.vehicleAttachLimit,
+          actingDriverLimit: profile.actingDriverLimit,
+          outstationPackageLimit: profile.outstationPackageLimit,
+          packagename: profile.packagename,
+          packageID: profile.packageID
         });
       },
 
@@ -65,12 +75,15 @@ export const useAuthStore = create<AuthState>()(
           userProfile: null,
           userRole: null,
           token: null,
+          isVehicleTag: false,
+          managedOwnerProfile: null,
         });
       },
 
       setIsVehicleTag: (value) => {
         set({ isVehicleTag: value });
       },
+      
       setManagedOwner: (owner) => {
         set({ managedOwnerProfile: owner });
       },

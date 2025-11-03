@@ -9,7 +9,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { useGetVehiclesByOwnerId, VehicleListItem } from "../../services/api";
-import { useActiveOwnerId } from "../../zustand/useAuthStore";
+import { useActiveOwnerId,useAuthStore } from "../../zustand/useAuthStore";
 import SvgCarIcon from "../../icons/SvgCarIcon";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Loader from "../../uikit/Loader/Loader";
@@ -63,7 +63,8 @@ const VehicleCard = ({
 const VehicleListScreen = () => {
   const activeOwnerId = useActiveOwnerId();
   const navigation = useNavigation();
-
+  const { userProfile,  } = useAuthStore();
+console.log(userProfile,'userProfile')
   const {
     data: vehicles,
     refetch,

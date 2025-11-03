@@ -11,7 +11,7 @@ import {
   Alert,
   Keyboard,
   StyleSheet,
-  SafeAreaView,
+  SafeAreaView,  Modal,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { Dropdown } from "react-native-element-dropdown";
@@ -30,6 +30,8 @@ import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
 import SvgCameraIcon from "../../icons/SvgCameraIcon";
 import { useCreateDriver, useEditDriver } from "../../services/api/driver";
+import {  useAuthStore } from "../../zustand/useAuthStore";
+
 import { useGetVehiclesByOwnerId } from "../../services/api";
 import {
   StackActions,
@@ -37,6 +39,7 @@ import {
   useNavigation,
 } from "@react-navigation/native";
 import PhoneInputText from "../../uikit/PhoneInputText/PhoneInputText";
+import { useGetDriversByOwnerID } from "../../services/api/driver";
 
 const validationSchema = Yup.object().shape({
   Username: Yup.string().required("Username is required"),
@@ -56,10 +59,12 @@ const DriverSetupScreen = ({ route }) => {
   const whatsappInputRef = useRef();
   const { driver } = route.params || {};
   const isEdit = !!driver;
+  const { setIsVehicleTag, userProfile, userRole } = useAuthStore();
 
   const modalRef = useRef(null);
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [countryCode, setCountryCode] = useState("+91");
+  const [showLimitModal, setShowLimitModal] = useState(false);
 
   const activeOwnerId = useActiveOwnerId();
   const {
@@ -67,6 +72,40 @@ const DriverSetupScreen = ({ route }) => {
     refetch,
     isLoading: isLoadingVehicles,
   } = useGetVehiclesByOwnerId(activeOwnerId);
+  const {
+    data: drivers,
+    isLoading:isLoadingVehicles1,
+    isError,
+    error,
+   
+  } = useGetDriversByOwnerID(activeOwnerId);
+
+console.log(drivers,'drivers')
+
+
+ useEffect(() => {
+    if (!isEdit && drivers && userProfile?.actingDriverLimit) {
+      const currentVehicleCount = drivers.length || 0;
+      const vehicleLimit = userProfile.actingDriverLimit;
+      
+      console.log(currentVehicleCount, vehicleLimit, 'Vehicle count vs limit');
+      
+      if (currentVehicleCount >= vehicleLimit) {
+        setShowLimitModal(true);
+      }
+    }
+  }, [vehicles, userProfile?.actingDriverLimit, isEdit, navigation]);
+  const handleLimitModalClose = () => {
+    setShowLimitModal(false);
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
+
+
+
+
+
   const createDriverMutation = useCreateDriver();
   const editDriverMutation = useEditDriver();
 
@@ -455,6 +494,36 @@ const DriverSetupScreen = ({ route }) => {
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
+   {/* Professional Limit Modal */}
+      <Modal
+        visible={showLimitModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleLimitModalClose}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.limitModalContainer}>
+            <View style={styles.limitModalHeader}>
+              <Text style={styles.limitModalTitle}>Limit Reached</Text>
+            </View>
+            <View style={styles.limitModalBody}>
+              <Text style={styles.limitModalMessage}>
+                You have reached your vehicle limit of {userProfile?.vehicleAttachLimit}. 
+                You cannot add more vehicles.
+              </Text>
+            </View>
+            <View style={styles.limitModalFooter}>
+              <TouchableOpacity
+                style={styles.limitModalButton}
+                onPress={handleLimitModalClose}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.limitModalButtonText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <ImageUploadModal
         modalRef={modalRef}
@@ -620,6 +689,78 @@ const styles = StyleSheet.create({
   dropdownItemText: {
     ...TYPOGRAPHY.body,
   },
+
+  // Professional Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  limitModalContainer: {
+    backgroundColor: colors.base.white,
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: colors.base.black,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  limitModalHeader: {
+    backgroundColor: "#F6A003",
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  limitModalTitle: {
+    ...TYPOGRAPHY.title,
+    color: colors.base.white,
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  limitModalBody: {
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  limitModalMessage: {
+    ...TYPOGRAPHY.body,
+    textAlign: 'center',
+    color: colors.text.primary,
+    lineHeight: 24,
+    fontSize: 16,
+  },
+  limitModalFooter: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
+  },
+  limitModalButton: {
+    backgroundColor: "#F6A003",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  limitModalButtonText: {
+    ...TYPOGRAPHY.button,
+    color: colors.base.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+
+
+
+
+
+
+
 });
 
 export default DriverSetupScreen;

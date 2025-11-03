@@ -18,6 +18,7 @@ import ComplaintScreen from "../Screens/Complaint/complaintListScreen";
 import { ComplaintNavigator } from "./ComplaintStack";
 // import {PaymenttranNavigator} from '../Screens/PaymentTransactions/Paymenttrans'
 import PackagescreenList from '../Screens/Package/PackageListScreen'
+import EditpackageScreen from '../Screens/Package/EditPackageScreen'
 import { TYPOGRAPHY } from "../theme/typography";
 import {useNavigation} from '@react-navigation/native'
 const Drawer = createDrawerNavigator();
@@ -92,6 +93,20 @@ export const MainDrawer = () => {
         }}
         component={PackagescreenList}
       />
+         <Drawer.Screen
+        name="EditPackageScreen"
+        options={{
+          title: "Trip Packages",
+           headerShown: true,
+          onHeaderRightPress: () => {
+            navigation.navigate("EditPackageScreen");
+          },
+        //  headerRightIcon: <Text style={styles.headerActionText}>Add</Text>,
+        }}
+        component={EditpackageScreen}
+      />
+
+      
             <Drawer.Screen
             name="BroadcastScreen"
             component={BroadcastScreen}

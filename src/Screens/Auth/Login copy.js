@@ -232,7 +232,7 @@ const SignInScreen = () => {
             latitude: locationRef.current.latitude?.toString(),
           };
           response = await loginMutation.mutateAsync(payload);
-
+console.log(response,'responsose')
           if (response?.loginStatus) {
             loginUser(
               {
@@ -242,11 +242,7 @@ const SignInScreen = () => {
                 mobileno: response.mobileno,
                 token: response.tokenvalue,
                 isVehicleTag: response.isvehicleTag,
-                vehicleAttachLimit: response.vehicleAttachLimit,
-                actingDriverLimit: response.actingDriverLimit,
-                outstationPackageLimit: response.outstationPackageLimit,
-                packagename: response.packagename,
-                packageID: response.packageID,
+
               },
               "owner"
             );
@@ -270,13 +266,7 @@ const SignInScreen = () => {
                 isSuperAdmin: response.issuperadmin,
                 locationID: response.locationID,
                 countryID: response.countryID,
-                userID: response.userID,
                 isVehicleTag: true,
-                vehicleAttachLimit: response.vehicleAttachLimit,
-                actingDriverLimit: response.actingDriverLimit,
-                outstationPackageLimit: response.outstationPackageLimit,
-                packagename: response.packagename,
-                packageID: response.packageID,
               },
               "admin"
             );
@@ -352,6 +342,7 @@ const SignInScreen = () => {
     }
   };
 
+  // ... rest of your component code remains the same ...
   const toastConfig = {
     success: ({ text1, text2 }) => (
       <View style={styles.toastContainer}>
@@ -595,17 +586,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  locationStatusCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 10,
-    padding: 12,
-    width: '90%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
+  // locationStatusCard: {
+  //   backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  //   borderRadius: 10,
+  //   padding: 12,
+  //   width: '90%',
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowOpacity: 0.1,
+  //   shadowRadius: 4,
+  //   elevation: 3,
+  // },
   locationReady: {
     flexDirection: "row",
     alignItems: "center",

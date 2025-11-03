@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -20,8 +20,10 @@ import { TYPOGRAPHY } from "../../theme/typography";
 import axios from 'axios';
 import { config } from '../../services/config';
 import { useAuthStore } from "../../zustand/useAuthStore";
-
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useQuery } from "@tanstack/react-query";
 const { width, height } = Dimensions.get("window");
+import { colors } from "../../uikit/UikitUtils/colors";
 
 // Responsive scale functions
 const scale = (size) => (width / 375) * size;
@@ -31,6 +33,8 @@ const GOOGLE_API_KEY = "AIzaSyDyIPNKYpe9zG_JlEEhl070cC28N0q4qbc";
 
 const PackageCreationScreen = () => {
   const [packageName, setPackageName] = useState("");
+
+  const navigation = useNavigation()
   const [fromCity, setFromCity] = useState("");
   const [toCity, setToCity] = useState("");
   const [fromSuggestions, setFromSuggestions] = useState([]);
@@ -43,7 +47,10 @@ const PackageCreationScreen = () => {
   const [errors, setErrors] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-    const { userProfile } = useAuthStore();
+  const { userProfile } = useAuthStore();
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [packages, setpackages] = useState([]);
+  const hasCheckedLimit = useRef(false);
 
   // Function to fetch suggestions from Google Places API
   const fetchPlaces = async (text, setSuggestions) => {
@@ -64,6 +71,61 @@ const PackageCreationScreen = () => {
     } catch (error) {
       console.log("Places API Error:", error);
     }
+  };
+
+  const useGetPackagesByOwnerId = async() => {
+    try {
+      const response = await axios.get(
+        `${config.BASE_URL}GetPackagelistbyOwner?OwnerID=${userProfile?.id}`
+      );
+      console.log(response.data.length,'value');
+      setpackages(response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching packages:", error);
+      return [];
+    }
+  };
+
+  // Use useFocusEffect to check limit every time screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkLimit = async () => {
+        if (!userProfile?.id || !userProfile?.outstationPackageLimit) {
+          return;
+        }
+
+        const fetchedPackages = await useGetPackagesByOwnerId();
+        const currentPackageCount = fetchedPackages?.length || 0;
+        const packageLimit = userProfile.outstationPackageLimit;
+        
+        console.log(currentPackageCount, packageLimit, 'Package count vs limit');
+        
+        if (currentPackageCount >= packageLimit) {
+          // Small delay to ensure modal shows properly
+          setTimeout(() => {
+            setShowLimitModal(true);
+          }, 300);
+        }
+      };
+
+      checkLimit();
+
+      // Cleanup function
+      return () => {
+        hasCheckedLimit.current = false;
+      };
+    }, [userProfile?.id, userProfile?.outstationPackageLimit])
+  );
+
+  const handleLimitModalClose = () => {
+    setShowLimitModal(false);
+    // Delay navigation slightly to allow modal to close smoothly
+    setTimeout(() => {
+      if (navigation.canGoBack()) {
+        navigation.goBack();
+      }
+    }, 100);
   };
 
   // Validation function
@@ -135,6 +197,7 @@ const PackageCreationScreen = () => {
           timeout: 10000,
         }
       );
+      navigation.navigate("PackageListScreen")
 
       return response.data;
 
@@ -183,13 +246,11 @@ const PackageCreationScreen = () => {
       formData.append('TwowayPrice', twoWayDrop ? twoWayPrice : '0');
       formData.append('LoginUserID', userProfile.id);
 
-   
-
       // Make API call with Axios
       const result = await createPackage(formData);
 
       // Success handling - Show modal instead of Alert
-      setSuccessMessage( "Trip Package created successfully!");
+      setSuccessMessage("Trip Package created successfully!");
       setShowSuccessModal(true);
 
     } catch (error) {
@@ -539,6 +600,37 @@ const PackageCreationScreen = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
+      {/* Professional Limit Modal */}
+      <Modal
+        visible={showLimitModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleLimitModalClose}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.limitModalContainer}>
+            <View style={styles.limitModalHeader}>
+              <Text style={styles.limitModalTitle}>Limit Reached</Text>
+            </View>
+            <View style={styles.limitModalBody}>
+              <Text style={styles.limitModalMessage}>
+                You have reached your package limit of {userProfile?.outstationPackageLimit}. 
+                You cannot add more packages.
+              </Text>
+            </View>
+            <View style={styles.limitModalFooter}>
+              <TouchableOpacity
+                style={styles.limitModalButton}
+                onPress={handleLimitModalClose}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.limitModalButtonText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Success Modal */}
       <Modal
         animationType="fade"
@@ -815,6 +907,62 @@ const styles = StyleSheet.create({
     marginTop: verticalScale(16),
     fontSize: scale(16),
     color: '#333',
+    fontWeight: '600',
+  },
+  // Professional Limit Modal Styles
+  limitModalContainer: {
+    backgroundColor: colors.base.white,
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: colors.base.black,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  limitModalHeader: {
+    backgroundColor: "#F6A003",
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  limitModalTitle: {
+    ...TYPOGRAPHY.title,
+    color: colors.base.white,
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  limitModalBody: {
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  limitModalMessage: {
+    ...TYPOGRAPHY.body,
+    textAlign: 'center',
+    color: colors.text.primary,
+    lineHeight: 24,
+    fontSize: 16,
+  },
+  limitModalFooter: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
+  },
+  limitModalButton: {
+    backgroundColor: "#F6A003",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  limitModalButtonText: {
+    ...TYPOGRAPHY.button,
+    color: colors.base.white,
+    fontSize: 16,
     fontWeight: '600',
   },
 });

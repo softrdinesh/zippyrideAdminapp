@@ -18,7 +18,7 @@ import { useGetVehicleById, useToggleVehicleStatus } from "../../services/api";
 import { colors } from "../../uikit/UikitUtils/colors";
 import SvgCarIcon from "../../icons/SvgCarIcon";
 import { TYPOGRAPHY } from "../../theme/typography";
-import { useActiveOwnerId } from "../../zustand/useAuthStore";
+import { useActiveOwnerId, useAuthStore } from "../../zustand/useAuthStore";
 
 const DetailRow = ({ label, value }) => (
   <View style={styles.detailRow}>
@@ -48,6 +48,7 @@ const VehicleDetailScreen = ({ route }) => {
   const activeOwnerId = useActiveOwnerId();
   vehicle;
   const isActive = vehicle?.isActive;
+  
 
   const toggleStatusMutation = useToggleVehicleStatus();
 

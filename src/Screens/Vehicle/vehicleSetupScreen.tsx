@@ -11,6 +11,7 @@ import {
   Alert,
   Keyboard,
   StyleSheet,
+  Modal,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { Dropdown } from "react-native-element-dropdown";
@@ -38,6 +39,7 @@ import InputText from "../../uikit/InputText/InputText";
 import { colors } from "../../uikit/UikitUtils/colors"; // Import your colors
 import { TYPOGRAPHY } from "../../theme/typography"; // Import your typography
 import { useNavigation } from "@react-navigation/native";
+import { useGetVehiclesByOwnerId, VehicleListItem } from "../../services/api";
 
 // ... (validationSchema remains the same)
 const validationSchema = Yup.object().shape({
@@ -67,16 +69,18 @@ const VehicleSetupScreen = ({ route }) => {
   const isEdit = vehicleId !== undefined;
   const navigation = useNavigation();
   const modalRef = useRef(null);
-
+  const activeOwnerId = useActiveOwnerId();
   const [showInfoModal, setShowInfoModal] = useState({
     isOpen: false,
     type: "success",
     message: "",
   });
+ 
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
+  const [showLimitModal, setShowLimitModal] = useState(false);
 
   const { setIsVehicleTag, userProfile, userRole } = useAuthStore();
-  const activeOwnerId = useActiveOwnerId();
+
   const { data, isLoading: isLoadingVehicleDetails } =
     useGetVehicleById(vehicleId);
   const { data: colorsData, isLoading: isLoadingColors } =
@@ -96,6 +100,33 @@ const VehicleSetupScreen = ({ route }) => {
     adminEditVehicleMutation.isPending ||
     isLoadingTypes ||
     isLoadingColors;
+   
+  const {
+    data: vehicles,
+    refetch,
+    isFetching: isLoadingVehicles,
+  } = useGetVehiclesByOwnerId(activeOwnerId);
+
+  // Check vehicle limit when component mounts and when vehicles data changes
+  useEffect(() => {
+    if (!isEdit && vehicles && userProfile?.vehicleAttachLimit) {
+      const currentVehicleCount = vehicles.length || 0;
+      const vehicleLimit = userProfile.vehicleAttachLimit;
+      
+      console.log(currentVehicleCount, vehicleLimit, 'Vehicle count vs limit');
+      
+      if (currentVehicleCount >= vehicleLimit) {
+        setShowLimitModal(true);
+      }
+    }
+  }, [vehicles, userProfile?.vehicleAttachLimit, isEdit, navigation]);
+
+  const handleLimitModalClose = () => {
+    setShowLimitModal(false);
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  };
 
   const formik = useFormik({
     initialValues: {
@@ -117,6 +148,17 @@ const VehicleSetupScreen = ({ route }) => {
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
       try {
+        // Check vehicle limit before submitting for new vehicles
+        if (!isEdit && vehicles && userProfile?.vehicleAttachLimit) {
+          const currentVehicleCount = vehicles.length || 0;
+          const vehicleLimit = userProfile.vehicleAttachLimit;
+          
+          if (currentVehicleCount >= vehicleLimit) {
+            setShowLimitModal(true);
+            return;
+          }
+        }
+
         const formData = new FormData();
 
         // Append all form values
@@ -529,6 +571,38 @@ const VehicleSetupScreen = ({ route }) => {
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
+      
+      {/* Professional Limit Modal */}
+      <Modal
+        visible={showLimitModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleLimitModalClose}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.limitModalContainer}>
+            <View style={styles.limitModalHeader}>
+              <Text style={styles.limitModalTitle}>Limit Reached</Text>
+            </View>
+            <View style={styles.limitModalBody}>
+              <Text style={styles.limitModalMessage}>
+                You have reached your vehicle limit of {userProfile?.vehicleAttachLimit}. 
+                You cannot add more vehicles.
+              </Text>
+            </View>
+            <View style={styles.limitModalFooter}>
+              <TouchableOpacity
+                style={styles.limitModalButton}
+                onPress={handleLimitModalClose}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.limitModalButtonText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <ImageUploadModal
         modalRef={modalRef}
         onImageSelected={handleImageSelected}
@@ -725,6 +799,69 @@ const styles = StyleSheet.create({
   dateText: {
     ...TYPOGRAPHY.body,
     color: colors.text.primary,
+  },
+  // Professional Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  limitModalContainer: {
+    backgroundColor: colors.base.white,
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: colors.base.black,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    elevation: 8,
+    overflow: 'hidden',
+  },
+  limitModalHeader: {
+    backgroundColor: "#F6A003",
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  limitModalTitle: {
+    ...TYPOGRAPHY.title,
+    color: colors.base.white,
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  limitModalBody: {
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+  },
+  limitModalMessage: {
+    ...TYPOGRAPHY.body,
+    textAlign: 'center',
+    color: colors.text.primary,
+    lineHeight: 24,
+    fontSize: 16,
+  },
+  limitModalFooter: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.default,
+  },
+  limitModalButton: {
+    backgroundColor: "#F6A003",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  limitModalButtonText: {
+    ...TYPOGRAPHY.button,
+    color: colors.base.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
