@@ -102,6 +102,8 @@ export const CustomDrawerContent = (props) => {
                 "View Complaints",
                 SvgComplaintIcon
               )}
+       {renderDrawerItem("SubscriptionLIst", "Owner Subscriptions ", SvgFeedbackIcon)}
+
             </>
           ) : (
             <>

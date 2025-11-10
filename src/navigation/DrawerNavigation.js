@@ -14,6 +14,7 @@ import Packagescreen from "../Screens/Package/Packagescreen";
 import { useAuthStore } from "../zustand/useAuthStore";
 import { OwnerNavigator } from "./OwnerStack";
 import FeedbackScreen from "../Screens/Feedback/feedbacksListScreen";
+import SubscriptionLIst from "../Screens/Subscriptions/SubscriptionLIst";
 import ComplaintScreen from "../Screens/Complaint/complaintListScreen";
 import { ComplaintNavigator } from "./ComplaintStack";
 // import {PaymenttranNavigator} from '../Screens/PaymentTransactions/Paymenttrans'
@@ -66,6 +67,12 @@ export const MainDrawer = () => {
             component={FeedbackScreen}
             options={{ headerShown: true, title: "Feedbacks" }}
           />
+           <Drawer.Screen
+            name="SubscriptionLIst"
+            component={SubscriptionLIst}
+            options={{ headerShown: true, title: "Owner Subscriptions" }}
+          />
+          
           <Drawer.Screen name="Complaints" component={ComplaintNavigator} />
         </>
       ) : (
