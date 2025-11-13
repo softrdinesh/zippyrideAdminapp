@@ -68,7 +68,10 @@ const Register = () => {
   const [loading, setloading] = useState(false);
 
   const SignUpSchema = Yup.object().shape({
-    fullname: Yup.string().required("Full Name is required"),
+    // fullname: Yup.string().required("Full Name is required"),
+        fullname: Yup.string().required('Full Name is required').min(8, "Full Name must be at least 8 characters")
+      .max(15, "Full Name Max is 15 characters"),
+
     username: Yup.string().required("Username is required"),
     companyname: Yup.string().required("Company name is required"),
     telegarmid: Yup.string(),

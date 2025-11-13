@@ -50,7 +50,7 @@ export const OwnerNavigator = () => {
           onHeaderRightPress: () => {
             navigation.navigate("OwnerSetupScreen");
           },
-          headerRightIcon: <Text style={styles.headerActionText}>Add</Text>,
+          headerRightIcon: <Text style={styles.headerActionText}>Add</Text>
         }}
         component={OwnerListScreen}
       />

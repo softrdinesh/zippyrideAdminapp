@@ -21,6 +21,7 @@ import { firebase } from "@react-native-firebase/messaging";
 import SvgOwnerIcon from "../../icons/SvgOwner";
 import SvgFeedbackIcon from "../../icons/SvgFeedback";
 import SvgComplaintIcon from "../../icons/SvgComplaints";
+import SubscriptionIcon from '../../icons/Subscriptionicon'
 import BroadcastIcon from "../../icons/BroadcastIcon";
 import Brocat from '../../assets/broadcast1.svg'
 import Packageicon from "../../icons/Packageicon";
@@ -102,7 +103,7 @@ export const CustomDrawerContent = (props) => {
                 "View Complaints",
                 SvgComplaintIcon
               )}
-       {renderDrawerItem("SubscriptionLIst", "Owner Subscriptions ", SvgFeedbackIcon)}
+       {renderDrawerItem("SubscriptionLIst", "Owner Subscriptions ", SubscriptionIcon)}
 
             </>
           ) : (

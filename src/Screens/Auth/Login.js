@@ -10,6 +10,7 @@ import {
   ImageBackground,
   Platform,
   Keyboard,
+  Modal,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useFormik } from "formik";
@@ -36,9 +37,20 @@ const { width, height } = Dimensions.get("window");
 const SignInScreen = () => {
   const navigation = useNavigation();
   const [hidePassword, setHidePassword] = useState(true);
+  const [hideNewPassword, setHideNewPassword] = useState(true);
+  const [hideConfirmPassword, setHideConfirmPassword] = useState(true);
   const [loading, setLoading] = useState(false);
   const [locationReady, setLocationReady] = useState(false);
   const [role, setRole] = useState("owner");
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [resetPasswordForm, setResetPasswordForm] = useState({
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [resetPasswordErrors, setResetPasswordErrors] = useState({});
+  const [usernameForReset, setUsernameForReset] = useState("");
+  const [ownerIDForReset, setOwnerIDForReset] = useState(null);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
 
   const loginMutation = useLogin();
   const adminLoginMutation = useAdminLogin();
@@ -186,9 +198,11 @@ const SignInScreen = () => {
   }, [locationReady]);
 
   const SignUpSchema = Yup.object().shape({
-    username: Yup.string().required("Please Enter username"),
+    username: Yup.string()
+      .required("Please Enter username")
+      .min(8, "Username must be at least 8 characters")
+      .matches(/^\S*$/, "Spaces are not allowed in username"),
     password: Yup.string()
-
       .when("role", {
         is: "owner",
         then: (schema) =>
@@ -198,6 +212,171 @@ const SignInScreen = () => {
     role: Yup.string().oneOf(["owner", "admin"]).required(),
   });
 
+  // Function to remove spaces from username and convert to lowercase
+  const handleUsernameChange = (text) => {
+    // Remove spaces from the input and convert to lowercase
+    const cleanedText = text.replace(/\s/g, '').toLowerCase();
+    formik.setFieldValue("username", cleanedText);
+  };
+
+  // Function to handle password change
+  const handlePasswordChange = (text) => {
+    formik.setFieldValue("password", text);
+  };
+
+  // Check if username and password are the same (case-insensitive)
+  const areCredentialsSame = (username, password) => {
+    if (!username || !password) return false;
+    return username.toLowerCase() === password.toLowerCase();
+  };
+
+  // Reset password validation
+  const validateResetPassword = () => {
+    const errors = {};
+
+    if (!resetPasswordForm.newPassword) {
+      errors.newPassword = "New password is required";
+    } else if (resetPasswordForm.newPassword.length < 8) {
+      errors.newPassword = "Password must be at least 8 characters";
+    } else if (areCredentialsSame(usernameForReset, resetPasswordForm.newPassword)) {
+      errors.newPassword = "New password cannot be same as username";
+    }
+
+    if (!resetPasswordForm.confirmPassword) {
+      errors.confirmPassword = "Please confirm your password";
+    } else if (resetPasswordForm.newPassword !== resetPasswordForm.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match";
+    }
+
+    setResetPasswordErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // API call to update owner password
+  const updateOwnerPassword = async (ownerID, newPassword) => {
+    try {
+      const response = await fetch('https://uat.zippyrideadminapi.projectpulse360.com/UpdateOwnerPassword', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ownerID: ownerID,
+          password: newPassword
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error updating password:', error);
+      throw error;
+    }
+  };
+
+  // Auto login after password reset
+  const handleAutoLoginAfterReset = async (username, newPassword) => {
+    setLoading(true);
+    try {
+      const fcmToken = await messaging().getToken();
+      const payload = {
+        username: username,
+        password: newPassword,
+        deviceToken: fcmToken,
+        longtitude: locationRef.current.longitude?.toString(),
+        latitude: locationRef.current.latitude?.toString(),
+      };
+      
+      const response = await loginMutation.mutateAsync(payload);
+      
+      if (response?.loginStatus) {
+        loginUser(
+          {
+            id: response.ownerID.toString(),
+            username: response.username,
+            profilepic: response.profilepic,
+            mobileno: response.mobileno,
+            token: response.tokenvalue,
+            isVehicleTag: response.isvehicleTag,
+            vehicleAttachLimit: response.vehicleAttachLimit,
+            actingDriverLimit: response.actingDriverLimit,
+            outstationPackageLimit: response.outstationPackageLimit,
+            packagename: response.packagename,
+            packageID: response.packageID,
+          },
+          "owner"
+        );
+        
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Password reset and login successful",
+        });
+        
+        formik.resetForm();
+        return true;
+      } else {
+        throw new Error("Auto login failed after password reset");
+      }
+    } catch (error) {
+      console.error("Auto login error:", error);
+      Toast.show({
+        type: "error",
+        text1: "Login Error",
+        text2: "Password reset successful but auto login failed. Please login manually.",
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle reset password
+  const handleResetPassword = async () => {
+    if (!validateResetPassword()) return;
+
+    setIsResettingPassword(true);
+    try {
+      // Call the update owner password API
+      const response = await updateOwnerPassword(ownerIDForReset, resetPasswordForm.newPassword);
+      
+      // Check if the API call was successful based on your API response structure
+      if (response) {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Password reset successfully. Logging you in...",
+        });
+        
+        // Auto login with new password
+        const loginSuccess = await handleAutoLoginAfterReset(usernameForReset, resetPasswordForm.newPassword);
+        
+        if (loginSuccess) {
+          // Successfully logged in, modal will be closed and navigation happens automatically
+          setShowResetPasswordModal(false);
+          setResetPasswordForm({ newPassword: "", confirmPassword: "" });
+          setResetPasswordErrors({});
+          setOwnerIDForReset(null);
+        }
+      } else {
+        throw new Error("Failed to reset password");
+      }
+    } catch (error) {
+      console.error("Reset password error:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to reset password. Please try again.",
+      });
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
   const formik = useFormik({
     initialValues: {
       username: "",
@@ -206,6 +385,7 @@ const SignInScreen = () => {
     },
     validationSchema: SignUpSchema,
     onSubmit: async (values) => {
+      // Check if location is ready
       if (!locationReady) {
         Toast.show({
           type: "error",
@@ -222,6 +402,7 @@ const SignInScreen = () => {
         let response;
         let success = false;
         const fcmToken = await messaging().getToken();
+        
         if (values.role === "owner") {
           // --- Owner Login Flow ---
           const payload = {
@@ -233,6 +414,17 @@ const SignInScreen = () => {
           };
           response = await loginMutation.mutateAsync(payload);
 
+          // Check if username and password are the same (case-insensitive) AND login was successful
+          if (areCredentialsSame(values.username, values.password) && response?.loginStatus && response?.ownerID) {
+            // Store the owner ID for reset password and show modal
+            setOwnerIDForReset(response.ownerID);
+            setUsernameForReset(values.username);
+            setShowResetPasswordModal(true);
+            setLoading(false);
+            return; // Don't proceed with normal login flow
+          }
+          
+          // Normal login flow when credentials are different
           if (response?.loginStatus) {
             loginUser(
               {
@@ -395,6 +587,101 @@ const SignInScreen = () => {
         position="top"
       />
 
+      {/* Reset Password Modal */}
+      <Modal
+        visible={showResetPasswordModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowResetPasswordModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Security Update Required</Text>
+              <Text style={styles.modalSubtitle}>
+                For your security, username and password cannot be identical. Please create a new password to continue.
+              </Text>
+            </View>
+
+            <View style={styles.passwordForm}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>New Password</Text>
+                <InputText
+                  maxLength={30}
+                  placeholder="Enter new password"
+                  value={resetPasswordForm.newPassword}
+                  onChange={(value) => 
+                    setResetPasswordForm(prev => ({ ...prev, newPassword: value }))
+                  }
+                  secureTextEntry={hideNewPassword}
+                  actionRight={() => (
+                    <TouchableOpacity
+                      onPress={() => setHideNewPassword(!hideNewPassword)}
+                      style={styles.eyeIcon}
+                    >
+                      {hideNewPassword ? <SvgEyeOutline /> : <SvgEye />}
+                    </TouchableOpacity>
+                  )}
+                />
+                {resetPasswordErrors.newPassword && (
+                  <Text style={styles.errorText}>{resetPasswordErrors.newPassword}</Text>
+                )}
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Confirm Password</Text>
+                <InputText
+                  maxLength={30}
+                  placeholder="Confirm new password"
+                  value={resetPasswordForm.confirmPassword}
+                  onChange={(value) => 
+                    setResetPasswordForm(prev => ({ ...prev, confirmPassword: value }))
+                  }
+                  secureTextEntry={hideConfirmPassword}
+                  actionRight={() => (
+                    <TouchableOpacity
+                      onPress={() => setHideConfirmPassword(!hideConfirmPassword)}
+                      style={styles.eyeIcon}
+                    >
+                      {hideConfirmPassword ? <SvgEyeOutline /> : <SvgEye />}
+                    </TouchableOpacity>
+                  )}
+                />
+                {resetPasswordErrors.confirmPassword && (
+                  <Text style={styles.errorText}>{resetPasswordErrors.confirmPassword}</Text>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setShowResetPasswordModal(false);
+                  setResetPasswordForm({ newPassword: "", confirmPassword: "" });
+                  setResetPasswordErrors({});
+                  setOwnerIDForReset(null);
+                }}
+                disabled={isResettingPassword}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.submitButton]}
+                onPress={handleResetPassword}
+                disabled={isResettingPassword}
+              >
+                {isResettingPassword ? (
+                  <Loader size="small" color="#333" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Update Password</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
@@ -461,7 +748,6 @@ const SignInScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* 8. Dynamic Label */}
           <Text style={styles.label}>
             {formik.values.role === "owner"
               ? "Enter Username"
@@ -480,7 +766,7 @@ const SignInScreen = () => {
                 : "Enter account ID"
             }
             value={formik.values.username}
-            onChange={formik.handleChange("username")}
+            onChange={handleUsernameChange} // Using custom handler to remove spaces
           />
           <View style={{ marginTop: height * 0.01, marginBottom: 20 }}>
             <Text style={styles.label}>Password</Text>
@@ -488,7 +774,7 @@ const SignInScreen = () => {
               maxLength={30}
               placeholder="Enter password"
               value={formik.values.password}
-              onChange={formik.handleChange("password")}
+              onChange={handlePasswordChange}
               name="password"
               touched={formik.touched}
               errors={formik.errors}
@@ -659,6 +945,91 @@ const styles = StyleSheet.create({
   roleButtonTextActive: {
     color: "#343A40",
     fontWeight: "600",
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 0,
+    width: "90%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    overflow: "hidden",
+  },
+  modalHeader: {
+    backgroundColor: "#F8F9FA",
+    padding: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E9ECEF",
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  passwordForm: {
+    padding: 24,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  eyeIcon: {
+    padding: 8,
+  },
+  errorText: {
+    color: "#DC3545",
+    fontSize: 12,
+    marginTop: 6,
+    marginLeft: 4,
+    fontWeight: "500",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    borderTopWidth: 1,
+    borderTopColor: "#E9ECEF",
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#FFFFFF",
+    borderRightWidth: 1,
+    borderRightColor: "#E9ECEF",
+  },
+  submitButton: {
+    backgroundColor: "#E5D463",
+  },
+  cancelButtonText: {
+    color: "#495057",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  submitButtonText: {
+    color: "#333",
+    fontWeight: "600",
+    fontSize: 16,
   },
 });
 
