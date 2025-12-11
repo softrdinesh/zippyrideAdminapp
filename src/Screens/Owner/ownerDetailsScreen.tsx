@@ -263,7 +263,7 @@ const OwnerDetailsScreen: React.FC = () => {
           </TouchableOpacity>
         </InfoCard>
         {/* Account Actions Card */}
-        <InfoCard title="Account Actions">
+        <InfoCard title="">
           <View style={styles.actionRow}>
             <View style={styles.actionTextContainer}>
               <Text style={styles.actionButtonText}>Owner Status</Text>

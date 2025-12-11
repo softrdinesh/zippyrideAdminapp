@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -9,12 +9,14 @@ import {
   Alert,
   TouchableOpacity,
   ActivityIndicator,
+  Switch,
 } from "react-native";
 import { colors } from "../../uikit/UikitUtils/colors";
 import { TYPOGRAPHY } from "../../theme/typography";
 import {
   DriverDetails,
   useResetDriverPassword,
+  useEditDriver
 } from "../../services/api/driver";
 import PaymentMethod from "../../icons/SvgPaymentMethod";
 import Toast from "react-native-toast-message";
@@ -26,6 +28,7 @@ import { KeyIcon } from "../../icons/SvgKeyIcon";
 import { ClockIcon } from "../../icons/SvgClockIcon";
 import { StarIcon } from "../../icons/SvgRating";
 import { UserIcon } from "../../icons/UserIcon";
+import moment from "moment";
 
 const InfoCard = ({
   title,
@@ -77,6 +80,10 @@ const DriverDetailsScreen: React.FC = ({ route }: any) => {
   const { driver }: { driver: DriverDetails } = route.params;
 
   const resetPasswordMutation = useResetDriverPassword();
+  const editDriverMutation = useEditDriver();
+  
+  // Initialize isActive based on driver status
+  const [isActive, setIsActive] = useState(driver.driverStatus === "Active");
 
   const handleResetPassword = () => {
     Alert.alert(
@@ -109,11 +116,117 @@ const DriverDetailsScreen: React.FC = ({ route }: any) => {
     );
   };
 
+  const handleToggleStatus = (newValue: boolean) => {
+    const action = newValue ? "enable" : "disable";
+    const statusText = newValue ? "Active" : "In-active";
+    
+    Alert.alert(
+      `${action.charAt(0).toUpperCase() + action.slice(1)} Driver`,
+      `Are you sure you want to ${action} ${driver.drivername}?`,
+      [
+        { 
+          text: "Cancel", 
+          style: "cancel", 
+          onPress: () => {
+            // Revert the switch to previous state
+            setIsActive(!newValue);
+          } 
+        },
+        {
+          text: `Yes, ${action.charAt(0).toUpperCase() + action.slice(1)}`,
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Create form data with all existing driver values and only update IsActive
+              const formData = new FormData();
+              
+              // Prepare all driver data exactly as your existing form does
+              const driverData = {
+                DriverID: driver.driverID,
+                OwnerID: driver.ownerID,
+                LoginUserID: driver.ownerID,
+                Drivername: driver.drivername,
+                Username: driver.riderLoginAccountname || "",
+                Mobileno: driver.mobileNo,
+                Whatsappno: driver.whatsappno || "",
+                Gpayno: driver.gpayno || "",
+                Paytmno: driver.paytmno || "",
+                Telegarmid: driver.telegramID || "",
+                Licenseno: driver.licenseNo,
+                Licenseexpirydate: driver.licenseExpirydate ? moment(driver.licenseExpirydate, "DD-MM-YYYY").toDate() : new Date(),
+                Address: driver.riderAddress || "",
+                VehicleID: driver.vehId,
+                IsFemailDriver: driver.isFemale === 1,
+                DriverPicFile: driver.riderpic || "",
+                IsActive: newValue
+              };
+
+              // Use the exact same logic as your existing form for FormData construction
+              Object.keys(driverData).forEach((key) => {
+                if (key === "DriverPicFile" && driverData[key]) {
+                  // Handle image exactly like your existing code
+                  const imageName = driverData[key].split("/").pop();
+                  const ext = imageName.split(".").pop();
+                  const imageType = ext ? `image/${ext}` : "image";
+                  formData.append("DriverPicFile", {
+                    uri: driverData[key],
+                    name: imageName,
+                    type: imageType,
+                  });
+                } else if (key === "Licenseexpirydate") {
+                  // Handle date exactly like your existing code
+                  formData.append(key, moment(driverData[key]).toISOString());
+                } else {
+                  // Handle all other fields exactly like your existing code
+                  formData.append(key, driverData[key]);
+                }
+              });
+
+              // Make API call to update driver status
+              const response = await editDriverMutation.mutateAsync(formData);
+              
+              console.log("API Response:", response);
+              
+              if (response?.code === 5999 || response?.driverID) {
+                // Update local state only on success
+                setIsActive(newValue);
+                
+                Toast.show({
+                  type: "success",
+                  text1: "Success",
+                  text2: `Driver has been ${action}d successfully.`,
+                });
+              } else {
+                // Revert on API failure
+                setIsActive(!newValue);
+                Toast.show({
+                  type: "error",
+                  text1: "Error",
+                  text2: response?.message || `Failed to ${action} driver.`,
+                });
+              }
+            } catch (error) {
+              // Revert on error
+              setIsActive(!newValue);
+              console.error("Failed to toggle driver status:", error);
+              Toast.show({
+                type: "error",
+                text1: "Error",
+                text2: error.message || "Failed to update driver status.",
+              });
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const getStatusStyle = () => {
     return driver.driverStatus === "Active"
       ? styles.statusActive
       : styles.statusInactive;
   };
+  
   const statusStyle = getStatusStyle();
 
   return (
@@ -218,24 +331,55 @@ const DriverDetailsScreen: React.FC = ({ route }: any) => {
             value={driver.paytmno}
           />
         </InfoCard>
+        
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Account Actions</Text>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleResetPassword}
-            disabled={resetPasswordMutation.isPending}
-          >
-            {resetPasswordMutation.isPending ? (
-              <ActivityIndicator color={colors.brand.primary} />
-            ) : (
-              <>
-                <KeyIcon />
-                <Text style={styles.actionButtonText}>Reset Password</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <View style={styles.actionRow}>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionButtonText}>Driver Status</Text>
+              <Text style={styles.actionSubText}>
+                {isActive ? "Active" : "Inactive"}
+              </Text>
+            </View>
+            <Switch
+              trackColor={{
+                false: colors.gray[200],
+                true: colors.status.success + "40",
+              }}
+              thumbColor={isActive ? colors.status.success : colors.gray[300]}
+              ios_backgroundColor={colors.gray[200]}
+              onValueChange={handleToggleStatus}
+              value={isActive}
+              disabled={editDriverMutation.isPending}
+            />
+          </View>
+       
+          <View style={{top:10}}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleResetPassword}
+              disabled={resetPasswordMutation.isPending}
+            >
+              {resetPasswordMutation.isPending ? (
+                <ActivityIndicator color={colors.brand.primary} />
+              ) : (
+                <>
+                  <KeyIcon />
+                  <Text style={styles.actionButtonText}>Reset Password</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
+      
+      {/* Show loading when updating status */}
+      {editDriverMutation.isPending && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={colors.brand.primary} />
+          <Text style={styles.loadingText}>Updating driver status...</Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -267,6 +411,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
+  },
+  actionTextContainer: {
+    flex: 1,
+  },
+  actionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 12,
+    backgroundColor: colors.gray[100],
+    borderRadius: 8,
   },
   driverName: {
     ...TYPOGRAPHY.header,
@@ -300,6 +455,12 @@ const styles = StyleSheet.create({
   statusActive: {
     container: { backgroundColor: colors.status.success + "20" },
     text: { color: colors.status.success },
+  },
+  actionSubText: {
+    ...TYPOGRAPHY.caption,
+    color: colors.gray[400],
+    marginLeft: 12,
+    marginTop: 2,
   },
   statusInactive: {
     container: { backgroundColor: colors.status.error + "20" },
@@ -362,6 +523,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: colors.gray[500],
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    ...TYPOGRAPHY.body,
+    color: colors.base.white,
+    marginTop: 12,
   },
 });
 

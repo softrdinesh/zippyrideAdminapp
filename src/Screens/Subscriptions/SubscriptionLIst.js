@@ -303,7 +303,7 @@ const SubscriptionList = () => {
               <SvgXml xml={calendarIcon} />
             </View>
             <Text style={styles.nextPaymentLabel}>Next Payment: </Text>
-            <Text style={styles.nextPaymentValue}>{formatDate(item.nextpaymentdate)}</Text>
+            <Text style={styles.nextPaymentValue}>{(item.nextpaymentdate)}</Text>
           </View>
         </View>
       )}

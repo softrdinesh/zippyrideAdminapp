@@ -198,17 +198,7 @@ const SignInScreen = () => {
   }, [locationReady]);
 
   const SignUpSchema = Yup.object().shape({
-    username: Yup.string()
-      .required("Please Enter username")
-      .when("role", {
-        is: "owner",
-        then: (schema) => 
-          schema
-         //   .min(8, "Username must be at least 8 characters")
-            .matches(/^\S*$/, "Spaces are not allowed in username"),
-        otherwise: (schema) => 
-          schema.matches(/^\S*$/, "Spaces are not allowed in username")
-      }),
+    username: Yup.string().required("Please Enter username").min(8, "Username must be at least 8 characters"),
     password: Yup.string()
       .when("role", {
         is: "owner",
@@ -218,18 +208,6 @@ const SignInScreen = () => {
       .required("Password is required"),
     role: Yup.string().oneOf(["owner", "admin"]).required(),
   });
-
-  // Function to remove spaces from username (but preserve case)
-  const handleUsernameChange = (text) => {
-    // Remove spaces from the input but preserve original case
-    const cleanedText = text.replace(/\s/g, '');
-    formik.setFieldValue("username", cleanedText);
-  };
-
-  // Function to handle password change
-  const handlePasswordChange = (text) => {
-    formik.setFieldValue("password", text);
-  };
 
   // Check if username and password are the same (case-insensitive)
   const areCredentialsSame = (username, password) => {
@@ -285,63 +263,6 @@ const SignInScreen = () => {
     }
   };
 
-  // Auto login after password reset
-  const handleAutoLoginAfterReset = async (username, newPassword) => {
-    setLoading(true);
-    try {
-      const fcmToken = await messaging().getToken();
-      const payload = {
-        username: username,
-        password: newPassword,
-        deviceToken: fcmToken,
-        longtitude: locationRef.current.longitude?.toString(),
-        latitude: locationRef.current.latitude?.toString(),
-      };
-      
-      const response = await loginMutation.mutateAsync(payload);
-      
-      if (response?.loginStatus) {
-        loginUser(
-          {
-            id: response.ownerID.toString(),
-            username: response.username,
-            profilepic: response.profilepic,
-            mobileno: response.mobileno,
-            token: response.tokenvalue,
-            isVehicleTag: response.isvehicleTag,
-            vehicleAttachLimit: response.vehicleAttachLimit,
-            actingDriverLimit: response.actingDriverLimit,
-            outstationPackageLimit: response.outstationPackageLimit,
-            packagename: response.packagename,
-            packageID: response.packageID,
-          },
-          "owner"
-        );
-        
-        Toast.show({
-          type: "success",
-          text1: "Success",
-          text2: "Password reset and login successful",
-        });
-        
-        formik.resetForm();
-        return true;
-      } else {
-        throw new Error("Auto login failed after password reset");
-      }
-    } catch (error) {
-      console.error("Auto login error:", error);
-      Toast.show({
-        type: "error",
-        text1: "Login Error",
-        text2: "Password reset successful but auto login failed. Please login manually.",
-      });
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Handle reset password
   const handleResetPassword = async () => {
     if (!validateResetPassword()) return;
@@ -356,19 +277,17 @@ const SignInScreen = () => {
         Toast.show({
           type: "success",
           text1: "Success",
-          text2: "Password reset successfully. Logging you in...",
+          text2: "Password reset successfully. Please login with your new password.",
         });
         
-        // Auto login with new password
-        const loginSuccess = await handleAutoLoginAfterReset(usernameForReset, resetPasswordForm.newPassword);
+        setShowResetPasswordModal(false);
+        setResetPasswordForm({ newPassword: "", confirmPassword: "" });
+        setResetPasswordErrors({});
+        setOwnerIDForReset(null);
+        setIsResettingPassword(false);
         
-        if (loginSuccess) {
-          // Successfully logged in, modal will be closed and navigation happens automatically
-          setShowResetPasswordModal(false);
-          setResetPasswordForm({ newPassword: "", confirmPassword: "" });
-          setResetPasswordErrors({});
-          setOwnerIDForReset(null);
-        }
+        // Clear the password field in the login form
+        formik.setFieldValue("password", "");
       } else {
         throw new Error("Failed to reset password");
       }
@@ -773,7 +692,7 @@ const SignInScreen = () => {
                 : "Enter account ID"
             }
             value={formik.values.username}
-            onChange={handleUsernameChange} // Using custom handler to remove spaces (preserves case)
+            onChange={formik.handleChange("username")}
           />
           <View style={{ marginTop: height * 0.01, marginBottom: 20 }}>
             <Text style={styles.label}>Password</Text>
@@ -781,7 +700,7 @@ const SignInScreen = () => {
               maxLength={30}
               placeholder="Enter password"
               value={formik.values.password}
-              onChange={handlePasswordChange}
+              onChange={formik.handleChange("password")}
               name="password"
               touched={formik.touched}
               errors={formik.errors}

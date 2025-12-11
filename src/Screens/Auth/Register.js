@@ -72,8 +72,9 @@ const Register = () => {
         fullname: Yup.string().required('Full Name is required').min(8, "Full Name must be at least 8 characters")
       .max(15, "Full Name Max is 15 characters"),
 
-    username: Yup.string().required("Username is required"),
-    companyname: Yup.string().required("Company name is required"),
+    username: Yup.string().required("Username is required").min(8, "Username must be at least 8 characters")
+      .max(15, "Username Max is 15 characters") .matches(/^\S*$/, "Spaces are not allowed in username"),
+    companyname: Yup.string().required("Company name is required") .max(20, "Company Name33 Max is 20 characters"),
     telegarmid: Yup.string(),
     password: Yup.string()
       .min(8, "Password must be at least 8 characters")
@@ -86,15 +87,25 @@ const Register = () => {
     confirmPassword: Yup.string()
       .oneOf([Yup.ref("password"), null], "Passwords must match")
       .required("Confirm Password is required"),
-    mobileno: Yup.string().required("Mobile Number is required"),
-    whatsappno: Yup.string(),
+    mobileno: Yup.string().required("Mobile Number is required").matches(/^\S*$/, "Spaces are not allowed in  Number"),
+    whatsappno: Yup.string().matches(/^\S*$/, "Spaces are not allowed in Whatsapp Number"),
     address: Yup.string().required("Address is required"),
     country: Yup.string().required("Country is required"),
     profilepick: Yup.string().required("Profile image is required"),
     locationID: Yup.number().required("Location is required"),
     packageID: Yup.number().required("Package is required"),
   });
+  const handleUsernameChange = (text) => {
+    // Remove spaces from the input but preserve original case
+    const cleanedText = text.replace(/\s/g, '');
+    formik.setFieldValue("username", cleanedText);
+  };
 
+    const handlefullnamechange = (text) => {
+    // Remove spaces from the input but preserve original case
+    const cleanedText = text.replace(/\s/g, '');
+    formik.setFieldValue("fullname", cleanedText);
+  };
   const formik = useFormik({
     initialValues: {
       fullname: "",
@@ -294,8 +305,10 @@ const Register = () => {
                 maxLength={20}
                 placeholder="Enter your full name"
                 value={formik.values.fullname}
-                onChange={formik.handleChange("fullname")}
+                //onChange={formik.handleChange("fullname")}
                 containerStyle={styles.input}
+               onChange={handlefullnamechange} // Using custom handler to remove spaces (preserves case)
+
               />
               <Text style={styles.label}>Username</Text>
               <InputText
@@ -306,7 +319,9 @@ const Register = () => {
                 maxLength={20}
                 placeholder="Enter your full name"
                 value={formik.values.username}
-                onChange={formik.handleChange("username")}
+               // onChange={formik.handleChange("username")}
+                  onChange={handleUsernameChange} // Using custom handler to remove spaces (preserves case)
+
                 containerStyle={styles.input}
               />
 
@@ -386,10 +401,10 @@ const Register = () => {
                   setCountryCode("+" + val.callingCode[0]);
                 }}
                 value={formik.values.mobileno}
-                onChange={(text) => {
-                  const numericValue = text.replace(/[^0-9+]/g, "");
-                  formik.handleChange("mobileno")(numericValue);
-                }}
+           onChange={(text) => {
+  const numericValue = text.replace(/[^0-9+]/g, "");
+  formik.setFieldValue("mobileno", numericValue);
+}}
                 containerStyle={styles.phoneInput}
               />
               {formik.touched.mobileno && formik.errors.mobileno && (
@@ -443,6 +458,7 @@ const Register = () => {
                 value={formik.values.telegarmid}
                 onChange={formik.handleChange("telegarmid")}
                 containerStyle={styles.input}
+
               />
               <Text style={styles.label}>Country</Text>
               <Dropdown

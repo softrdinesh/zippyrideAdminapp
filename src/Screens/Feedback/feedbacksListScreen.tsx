@@ -199,6 +199,8 @@ const FeedbackScreen: React.FC = () => {
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
         mode="date"
+                        minimumDate={new Date()}
+
         onConfirm={handleConfirmDate}
         onCancel={() => setDatePickerVisible(false)}
       />

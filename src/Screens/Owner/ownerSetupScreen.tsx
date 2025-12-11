@@ -306,7 +306,24 @@ const OwnerSetupScreen = () => {
                 containerStyle={styles.input}
               />
               <Text style={styles.label}>Username</Text>
+               {isEdit ? (
+
+         
               <InputText
+                name={"username"}
+                touched={formik.touched}
+                errors={formik.errors}
+                error={formik.errors.username && formik.touched.username}
+                maxLength={20}
+                disabled={true}
+                placeholder="Enter your full name"
+                value={formik.values.username}
+                //onChange={formik.handleChange("username")}
+                containerStyle={styles.input}
+              />
+                 ):
+                 
+                  <InputText
                 name={"username"}
                 touched={formik.touched}
                 errors={formik.errors}
@@ -317,6 +334,7 @@ const OwnerSetupScreen = () => {
                 onChange={formik.handleChange("username")}
                 containerStyle={styles.input}
               />
+                 }
 
               <Text style={styles.label}>Company Name</Text>
               <InputText

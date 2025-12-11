@@ -282,6 +282,24 @@ const VehicleSetupScreen = ({ route }) => {
     formik.setFieldValue("FcexpiryDate", date);
     setDatePickerVisible(false);
   };
+ const handleVehicleNumberchange = (text) => {
+    // Remove spaces from the input but preserve original case
+    const cleanedText = text.replace(/\s/g, '');
+    formik.setFieldValue("Vehno", cleanedText);
+  };
+ const handleVehicleenginenumber = (text) => {
+    // Remove spaces from the input but preserve original case
+    const cleanedText = text.replace(/\s/g, '');
+    formik.setFieldValue("EngineNo", cleanedText);
+  };
+
+   const handlechasisnumber = (text) => {
+    // Remove spaces from the input but preserve original case
+    const cleanedText = text.replace(/\s/g, '');
+    formik.setFieldValue("Chasisno", cleanedText);
+  };
+
+
 
   useEffect(() => {
     if (data && vehicleId && colorsData && types) {
@@ -349,7 +367,7 @@ const VehicleSetupScreen = ({ route }) => {
           </View>
 
           <View style={styles.formContainer}>
-            <Text style={styles.label}>Vehical Name</Text>
+            <Text style={styles.label}>Vehicle Name</Text>
             <InputText
               name={"VehName"}
               touched={formik.touched}
@@ -371,7 +389,8 @@ const VehicleSetupScreen = ({ route }) => {
               maxLength={10}
               placeholder="Enter your vehicle number"
               value={formik.values.Vehno}
-              onChange={formik.handleChange("Vehno")}
+              // onChange={formik.handleChange("Vehno")}
+            onChange={handleVehicleNumberchange}
               containerStyle={styles.input}
             />
             <Text style={styles.label}>Type</Text>
@@ -442,8 +461,10 @@ const VehicleSetupScreen = ({ route }) => {
               maxLength={20}
               placeholder="Enter your engine number"
               value={formik.values.EngineNo}
-              onChange={formik.handleChange("EngineNo")}
+             // onChange={formik.handleChange("EngineNo")}
               containerStyle={styles.input}
+                       onChange={handleVehicleenginenumber}
+
             />
             <Text style={styles.label}>Chasis number</Text>
             <InputText
@@ -454,8 +475,10 @@ const VehicleSetupScreen = ({ route }) => {
               maxLength={20}
               placeholder="Enter your chasis number"
               value={formik.values.Chasisno}
-              onChange={formik.handleChange("Chasisno")}
+            //  onChange={formik.handleChange("Chasisno")}
               containerStyle={styles.input}
+         onChange={handlechasisnumber}
+
             />
             <Text style={styles.label}>FC Expiry Date</Text>
             <TouchableOpacity

@@ -44,7 +44,8 @@ import { useGetDriversByOwnerID } from "../../services/api/driver";
 const validationSchema = Yup.object().shape({
   Username: Yup.string().required("Username is required"),
   Drivername: Yup.string().required("Driver name is required"),
-  Licenseno: Yup.string().required("License number is required"),
+  Licenseno: Yup.string().required("License number is required").test('no-special-chars', 'Commas and periods are not allowed', 
+      (value) => !value || !/[,.]/.test(value)),
   Mobileno: Yup.string().required("Mobile Number is required"),
   Whatsappno: Yup.string().required("Whatsapp Number is required"),
   Licenseexpirydate: Yup.date().required("License expiry date is required"),
@@ -243,6 +244,31 @@ console.log(drivers,'drivers')
     }, [])
   );
 
+// space validations
+ const handledrivername = (text) => {
+    // Remove spaces from the input but preserve original case
+    const cleanedText = text.replace(/\s/g, '');
+    formik.setFieldValue("Drivername", cleanedText);
+  };
+ const handleusername = (text) => {
+    // Remove spaces from the input but preserve original case
+    const cleanedText = text.replace(/\s/g, '');
+    formik.setFieldValue("Username", cleanedText);
+  };
+
+ const handlelicensenumber = (text) => {
+    // Remove spaces from the input but preserve original case
+    const cleanedText = text.replace(/\s/g, '');
+    formik.setFieldValue("Licenseno", cleanedText);
+  };
+
+
+
+
+
+
+
+
   return (
     <SafeAreaView style={styles.container}>
       {isLoading && <Loader />}
@@ -289,8 +315,9 @@ console.log(drivers,'drivers')
                 errors={formik.errors}
                 error={formik.errors.Drivername && formik.touched.Drivername}
                 value={formik.values.Drivername}
-                onChange={formik.handleChange("Drivername")}
+                // onChange={formik.handleChange("Drivername")}
                 containerStyle={styles.input}
+                onChange={handledrivername}
               />
 
               <Text style={styles.label}>Username</Text>
@@ -302,8 +329,9 @@ console.log(drivers,'drivers')
                 errors={formik.errors}
                 error={formik.errors.Username && formik.touched.Username}
                 value={formik.values.Username}
-                onChange={formik.handleChange("Username")}
+               // onChange={formik.handleChange("Username")}
                 containerStyle={styles.input}
+                onChange={handleusername}
               />
 
               <Text style={styles.label}>Mobile Number</Text>
@@ -399,7 +427,8 @@ console.log(drivers,'drivers')
                 error={formik.errors.Licenseno && formik.touched.Licenseno}
                 maxLength={20}
                 value={formik.values.Licenseno}
-                onChange={formik.handleChange("Licenseno")}
+                // onChange={formik.handleChange("Licenseno")}
+                onChange={handlelicensenumber}
                 containerStyle={styles.input}
               />
 
@@ -532,6 +561,8 @@ console.log(drivers,'drivers')
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
         mode="date"
+                minimumDate={new Date()}
+
         onConfirm={handleConfirmDate}
         onCancel={() => setDatePickerVisible(false)}
         date={formik.values.Licenseexpirydate || new Date()}

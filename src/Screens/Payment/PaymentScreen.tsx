@@ -96,7 +96,8 @@ const PaymentScreen: React.FC = () => {
    const updatePromises = pendingVehicles.map((vehicle, index) => {
   const payload = {
     ownerID: activeOwnerId,
-    vehicleID: vehicle.vehicleID,
+    // vehicleID: vehicle.vehicleID,
+    paidamount: totalAmount,
     razorpaymentID: paymentResponse.razorpay_payment_id,
   };
 
