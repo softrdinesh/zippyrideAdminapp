@@ -9,9 +9,10 @@ const DebugTriggerButton: React.FC = () => {
   const { toggleLogger } = useDebugStore();
 
   return (
-    <TouchableOpacity style={styles.floatingButton} onPress={toggleLogger}>
-      <Text style={styles.buttonText}>LOGS</Text>
-    </TouchableOpacity>
+    <></>
+    // <TouchableOpacity style={styles.floatingButton} onPress={toggleLogger}>
+    //   <Text style={styles.buttonText}>LOGS</Text>
+    // </TouchableOpacity>
   );
 };
 

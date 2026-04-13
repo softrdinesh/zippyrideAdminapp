@@ -55,7 +55,108 @@ const PaymentScreen: React.FC = () => {
   const hasPendingPayments = totalAmount > 0;
   const pendingVehicles = paymentInfo?.filter(payment => payment.amount > 0) || [];
 
-  const handlePayment = async () => {
+//   const handlePayment = async () => {
+//     if (!totalAmount || pendingVehicles.length === 0) return;
+
+//     setIsPaying(true);
+//     let orderIdForFailureHandling: string | null = null;
+
+//     try {
+//       const formdata = new FormData();
+//       formdata.append("amount", totalAmount * 100);
+//       formdata.append("currency", "INR");
+
+//       const order = await generateOrderMutation.mutateAsync(formdata);
+// console.log(order,'ffff')
+//       if (!order || !order.razorid) {
+//         throw new Error("Failed to generate payment order.");
+//       }
+//       orderIdForFailureHandling = order.razorid;
+
+//       const options = {
+//         description: "Payment for services",
+//         currency: "INR",
+//         key: config.RAZOR_PAY_KEY,
+//         amount: order.amount.toString(),
+//         name: "ZippyRide Admin",
+//         order_id: order.razorid,
+//         prefill: {
+//           contact: userProfile?.mobileno || "9999999999",
+//           name: userProfile?.username || "Admin User",
+//           // contact: "9999999999",
+//           // name:  "Admin User",
+//         },
+//         theme: { color: colors.brand.primary },
+//       };
+
+//       const paymentResponse = await RazorpayCheckout.open(options);
+//       console.log("paymentResponse", paymentResponse);
+
+//       // Update payment for all pending vehicles
+//    const updatePromises = pendingVehicles.map((vehicle, index) => {
+//   const payload = {
+//     ownerID: activeOwnerId,
+//     // vehicleID: vehicle.vehicleID,
+//     paidamount: totalAmount,
+//     razorpaymentID: paymentResponse.razorpay_payment_id,
+//   };
+
+//   console.log(`🔹 [${index + 1}] updateOnlinePayment payload:`, payload);
+
+//   return updatePaymentMutation.mutateAsync(payload);
+// });
+
+// await Promise.all(updatePromises);
+
+
+//       Toast.show({
+//         type: "success",
+//         text1: "Payment Successful!",
+//         text2: `Payment processed for ${pendingVehicles.length} vehicle(s).`,
+//       });
+
+//       refetch();
+//     } catch (error) {
+//       console.error("Payment Failed:", error);
+
+//       const isCancelledByUser = error.code === 0;
+
+//       if (activeOwnerId && orderIdForFailureHandling) {
+//         try {
+//           const failurePayload = {
+//             ownerID: activeOwnerId,
+//             razorpaymentID: orderIdForFailureHandling,
+//             amount: totalAmount,
+//             isCancelpayment: isCancelledByUser,
+//             ispaymentFail: !isCancelledByUser,
+//           };
+
+//           await updateFailedPaymentMutation.mutateAsync(failurePayload);
+//           console.log("Payment failure successfully logged to backend.");
+//         } catch (backendError) {
+//           console.error(
+//             "Failed to log payment failure to backend:",
+//             backendError
+//           );
+//         }
+//       }
+
+//       if (isCancelledByUser) {
+//         Toast.show({ type: "info", text1: "Payment Cancelled" });
+//       } else {
+//         Toast.show({
+//           type: "error",
+//           text1: "Payment Failed",
+//           text2: error.description || error.message,
+//         });
+//       }
+//     } finally {
+//       setIsPaying(false);
+//     }
+//   };
+
+
+const handlePayment = async () => {
     if (!totalAmount || pendingVehicles.length === 0) return;
 
     setIsPaying(true);
@@ -63,28 +164,27 @@ const PaymentScreen: React.FC = () => {
 
     try {
       const formdata = new FormData();
-      formdata.append("amount", totalAmount * 100);
+      formdata.append("amount", String(totalAmount * 100));
       formdata.append("currency", "INR");
 
       const order = await generateOrderMutation.mutateAsync(formdata);
+      console.log(order, 'ffff');
 
-      if (!order || !order.id) {
+      if (!order || !order.razorid) {
         throw new Error("Failed to generate payment order.");
       }
-      orderIdForFailureHandling = order.id;
+      orderIdForFailureHandling = order.razorid;
 
       const options = {
         description: "Payment for services",
         currency: "INR",
         key: config.RAZOR_PAY_KEY,
-        amount: order.amount.toString(),
+        amount: totalAmount * 100, // ✅ FIX: use totalAmount directly since backend doesn't return amount
         name: "ZippyRide Admin",
-        order_id: order.id,
+        order_id: order.razorid,
         prefill: {
           contact: userProfile?.mobileno || "9999999999",
           name: userProfile?.username || "Admin User",
-          // contact: "9999999999",
-          // name:  "Admin User",
         },
         theme: { color: colors.brand.primary },
       };
@@ -92,22 +192,23 @@ const PaymentScreen: React.FC = () => {
       const paymentResponse = await RazorpayCheckout.open(options);
       console.log("paymentResponse", paymentResponse);
 
-      // Update payment for all pending vehicles
-   const updatePromises = pendingVehicles.map((vehicle, index) => {
-  const payload = {
-    ownerID: activeOwnerId,
-    // vehicleID: vehicle.vehicleID,
-    paidamount: totalAmount,
-    razorpaymentID: paymentResponse.razorpay_payment_id,
-  };
+      if (!paymentResponse?.razorpay_payment_id) {
+        throw new Error("Invalid payment response from Razorpay.");
+      }
 
-  console.log(`🔹 [${index + 1}] updateOnlinePayment payload:`, payload);
+      const updatePromises = pendingVehicles.map((vehicle, index) => {
+        const payload = {
+          ownerID: activeOwnerId,
+          paidamount: totalAmount,
+          razorpaymentID: paymentResponse.razorpay_payment_id,
+        };
 
-  return updatePaymentMutation.mutateAsync(payload);
-});
+        console.log(`🔹 [${index + 1}] updateOnlinePayment payload:`, payload);
 
-await Promise.all(updatePromises);
+        return updatePaymentMutation.mutateAsync(payload);
+      });
 
+      await Promise.all(updatePromises);
 
       Toast.show({
         type: "success",
@@ -119,7 +220,7 @@ await Promise.all(updatePromises);
     } catch (error) {
       console.error("Payment Failed:", error);
 
-      const isCancelledByUser = error.code === 0;
+      const isCancelledByUser = error?.code === 0;
 
       if (activeOwnerId && orderIdForFailureHandling) {
         try {
@@ -147,14 +248,13 @@ await Promise.all(updatePromises);
         Toast.show({
           type: "error",
           text1: "Payment Failed",
-          text2: error.description || error.message,
+          text2: error?.description || error?.message,
         });
       }
     } finally {
       setIsPaying(false);
     }
   };
-
   useFocusEffect(
     useCallback(() => {
       refetch();
